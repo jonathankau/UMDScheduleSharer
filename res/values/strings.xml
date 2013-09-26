@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">UMD Schedule Sharer</string>
+
+    <string-array name="semester_selection">
+        <item>Fall 2013</item>
+        <item>Spring 2013</item>
+        <item>Winter 2013</item>
+        <item>Fall 2012</item>
+        <item>Spring 2012</item>
+    </string-array>
+
+</resources>
