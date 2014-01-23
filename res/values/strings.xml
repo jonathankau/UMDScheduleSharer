@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">UMD Schedule Sharer</string>
+    <string name="app_name">UMD Social Scheduler</string>
 
     <string-array name="semester_selection">
         <item>Fall 2013</item>
@@ -9,5 +10,12 @@
         <item>Fall 2012</item>
         <item>Spring 2012</item>
     </string-array>
+
+    <string name="main_title">UMD Social Scheduler</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_sign_in">SignInActivity</string>
+    <string name="app_id">580519828708344</string>
 
 </resources>

@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.util.Random;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -14,7 +15,6 @@ import android.graphics.drawable.PictureDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +26,7 @@ import android.webkit.WebViewClient;
 
 
 @SuppressLint("JavascriptInterface")
-public class LoginActivity extends ActionBarActivity {
+public class LoginActivity extends Activity {
 	public boolean loginCompleted = false;
 	public String lastFileSaved = "";
 	public static final String headerString = "<center><font size=\"+2\"><b><font color=\"darkblue\">Term</font>";
@@ -66,6 +66,7 @@ public class LoginActivity extends ActionBarActivity {
 		WebView browser = (WebView) findViewById(R.id.login_page);
 		browser.getSettings().setJavaScriptEnabled(true);
 		browser.getSettings().setBuiltInZoomControls(true);
+		browser.getSettings().setDomStorageEnabled(true);
 
 		// Sets the webview client for the initial my.umd.edu page
 		browser.setWebViewClient(new WebViewClient() {  
@@ -77,6 +78,10 @@ public class LoginActivity extends ActionBarActivity {
 
 			@Override
 			public void onPageFinished(WebView view, String url) {
+				// Inject javascript into hidden WebView in order to transfer username, password, and to sign in
+				view.loadUrl("javascript: document.LoginPortletForm.in_tx_username.value='hkau'");
+				view.loadUrl("javascript: document.LoginPortletForm.in_pw_userpass.value='Pekklerocks94#'");
+				view.loadUrl("javascript: document.getElementById('loginFormID').submit()");
 
 				// Wait for completed login using UID       
 				CookieManager manager = CookieManager.getInstance();
@@ -108,7 +113,7 @@ public class LoginActivity extends ActionBarActivity {
 					});
 
 					// Load the actual schedule page
-					view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201308");
+					view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
 				}
 			}
 		});
