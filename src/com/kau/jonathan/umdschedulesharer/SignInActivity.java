@@ -4,12 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -17,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
@@ -28,9 +23,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.facebook.Request;
@@ -63,16 +61,44 @@ public class SignInActivity extends Activity {
 		setContentView(R.layout.activity_sign_in);
 
 		Intent intent = getIntent();
+		
+		// Generate typefaces
+		
+		final Typeface face=Typeface.createFromAsset(this.getAssets(),
+				"fonts/Lato-Reg.ttf");
+		final Typeface boldface=Typeface.createFromAsset(this.getAssets(),
+				"fonts/Lato-Bol.ttf");
 
-		/*		// Populate Spinner choices
-		Spinner spinner = (Spinner) findViewById(R.id.semesters);
+
+		// Populate Spinner choices
+		Spinner spinner = (Spinner) findViewById(R.id.semester_spinner);
 		// Create an ArrayAdapter using the string array and a default spinner layout
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-		        R.array.semesters_array, android.R.layout.simple_spinner_item);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item){
+
+			public View getView(int position, View convertView, ViewGroup parent) {
+				View v = super.getView(position, convertView, parent);				
+				((TextView) v).setTypeface(face);
+				return v;
+			}
+
+
+			public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
+				View v =super.getDropDownView(position, convertView, parent);
+				((TextView) v).setTypeface(face);
+				return v;
+			}
+		};
+		
+		String[] semesters = getResources().getStringArray(R.array.semesters_array);
+		
+		for(String s: semesters) {
+			adapter.add(s);
+		}
+		
 		// Specify the layout to use when the list of choices appears
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		// Apply the adapter to the spinner
-		spinner.setAdapter(adapter);*/
+		spinner.setAdapter(adapter);
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
@@ -82,18 +108,13 @@ public class SignInActivity extends Activity {
 		profilePictureView = (ProfilePictureView) findViewById(R.id.selection_profile_pic);
 		profilePictureView.setCropped(true);
 
-		// Find the title and name views
+		// Change typeface for all text
 		title = (TextView)findViewById(R.id.main_title);
 		username = (TextView)findViewById(R.id.selection_user_name);
 
 		EditText umd_username = (EditText) findViewById(R.id.umd_username);
 		EditText umd_password = (EditText) findViewById(R.id.umd_password);
 		Button umd_login = (Button) findViewById(R.id.umd_login);
-
-		Typeface face=Typeface.createFromAsset(this.getAssets(),
-				"fonts/Lato-Reg.ttf");
-		Typeface boldface=Typeface.createFromAsset(this.getAssets(),
-				"fonts/Lato-Bol.ttf");
 
 		title.setTypeface(face);
 		username.setTypeface(face);
@@ -133,6 +154,7 @@ public class SignInActivity extends Activity {
 				username.setVisibility(View.VISIBLE);
 				title.setVisibility(View.VISIBLE);
 				findViewById(R.id.login_box).setVisibility(View.VISIBLE);
+				findViewById(R.id.picture_frame).setVisibility(View.VISIBLE);
 
 				if (session == Session.getActiveSession()) {
 					if (user != null) {
@@ -140,11 +162,11 @@ public class SignInActivity extends Activity {
 						// view that in turn displays the profile picture.
 						profilePictureView.setProfileId(user.getId());
 						// Set the Textview's text to the user's name.
-						username.setText("Hi there, " + user.getName() + "!");
-						
+						username.setText(user.getName());
+
 						// Get Facebook number ID
 						fb_id = user.getId();
-						
+
 
 						// Playing with image stuff
 						String imageUrl= "http://graph.facebook.com/" + fb_id + "/picture?type=large";
@@ -185,7 +207,7 @@ public class SignInActivity extends Activity {
 	public void onResume() {
 		super.onResume();
 		uiHelper.onResume();	
-		
+
 	}
 
 	@Override

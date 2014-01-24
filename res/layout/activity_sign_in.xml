@@ -22,84 +22,88 @@
         android:text="@string/main_title"
         android:textSize="28sp"
         android:visibility="gone" />
-    
+
     <FrameLayout
+        android:id="@+id/picture_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
         android:background="@drawable/circular_prof"
-        android:padding="5dp"
-        android:layout_marginBottom="10dp">
-    <ImageView      
-        android:layout_width="125dp"
-        android:layout_height="125dp"
-        android:id="@+id/test_prof_pic"
-        android:gravity="center"/>
+        android:padding="4dp"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/test_prof_pic"
+            android:layout_width="125dp"
+            android:layout_height="125dp"
+            android:gravity="center" />
     </FrameLayout>
 
-<com.facebook.widget.ProfilePictureView        
+    <com.facebook.widget.ProfilePictureView
+        android:id="@+id/selection_profile_pic"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:id="@+id/selection_profile_pic"
         android:gravity="center_horizontal"
-        android:paddingBottom="10dp"
+        android:paddingBottom="0dp"
         android:visibility="gone"
-        facebook:preset_size="normal"/>
+        facebook:preset_size="normal" />
 
     <TextView
         android:id="@+id/selection_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:paddingBottom="30dp"
+        android:paddingBottom="0dp"
         android:textColor="#FFFFFF"
-        android:textSize="16sp"
+        android:textSize="22sp"
         android:visibility="gone" />
+
+    <Spinner
+        android:id="@+id/semester_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/apptheme_spinner_background_holo_dark"/>
 
     <LinearLayout
         android:id="@+id/login_box"
-        android:visibility="gone"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:background="@drawable/white_button"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone" >
 
         <EditText
             android:id="@+id/umd_username"
+            style="@style/Custom_Input"
             android:layout_width="190dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/apptheme_edit_text_holo_light"
-            android:hint="Directory ID"
-            style="@style/Custom_Input"
-            android:layout_marginBottom="5dp"/>
+            android:hint="Directory ID" />
 
         <EditText
             android:id="@+id/umd_password"
+            style="@style/Custom_Input"
             android:layout_width="190dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:background="@drawable/apptheme_edit_text_holo_light"
             android:hint="Password"
-            android:layout_marginBottom="14dp" 
-            android:inputType="textPassword"
-            style="@style/Custom_Input"/>
-
-<!--         <View
-            android:padding="0dp"
-            android:layout_width="fill_parent"
-            android:layout_height="2dp"
-            android:background="@color/main_red" /> -->
+            android:inputType="textPassword" />
 
         <Button
             android:id="@+id/umd_login"
-            android:paddingBottom="15dp"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:background="#00000000"
+            android:paddingBottom="10dp"
+            android:text="Sign In"
             android:textColor="@drawable/red_text_button"
-            android:textSize="16dp"
-            android:text="Sign In" />
+            android:textSize="16dp" />
     </LinearLayout>
 
 </LinearLayout>
