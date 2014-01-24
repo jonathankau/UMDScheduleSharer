@@ -16,8 +16,7 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
+        android:label="@string/app_name" >
         <activity
             android:name="com.kau.jonathan.umdschedulesharer.LoginActivity"
             android:configChanges="orientation|keyboardHidden"
@@ -37,11 +36,28 @@
         </activity>
         <activity
             android:name="com.kau.jonathan.umdschedulesharer.SignInActivity"
-            android:label="@string/title_activity_sign_in" 
+            android:label="@string/title_activity_sign_in"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.NoTitleBar">
+            android:theme="@android:style/Theme.NoTitleBar" >
         </activity>
-        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/app_id"/>
+        <activity
+            android:name="com.kau.jonathan.umdschedulesharer.ScheduleActivity"
+            android:label="@string/title_activity_sign_in"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
+        </activity>
+        <activity
+            android:name="com.kau.umdschedulesharer.SignInActivity"
+            android:label="@string/title_activity_sign_in" >
+        </activity>
+        <activity
+            android:name="com.facebook.LoginActivity"
+            android:theme="@style/Custom_Dialog_Style" >
+        </activity>
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/app_id" />
     </application>
 
-</manifest>
+</manifest>

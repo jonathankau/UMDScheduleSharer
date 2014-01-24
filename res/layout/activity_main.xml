@@ -20,20 +20,23 @@
         android:textSize="28sp"
         style="@style/CodeFont"
         android:paddingBottom="25dp"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:visibility="invisible"/>
 
     <ImageView
         android:paddingBottom="30dp"
-        android:id="@+id/imageView1"
+        android:id="@+id/terp_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/terp_logo" />
+        android:src="@drawable/terp_logo" 
+        android:visibility="invisible"/>
 
-    <Button
+    <com.facebook.widget.LoginButton
         style="@style/WhiteButton"
         android:background="@drawable/white_button"
         android:id="@+id/fb_login"
         android:text="Login with Facebook" 
-        android:onClick="signIntoFacebook"/>
+        android:onClick="signIntoFacebook"
+        android:visibility="invisible"/>
 
 </LinearLayout>
