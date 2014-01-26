@@ -56,6 +56,7 @@ public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;
 	public static final String headerString = "<center>";
 	ProgressDialog loggingIn;
+	ProgressDialog umdLoginDialog;
 	ProfilePictureView profilePictureView;
 	TextView username;
 	TextView title;
@@ -301,11 +302,13 @@ public class SignInActivity extends Activity {
 
 	// When user presses sign in	
 	public void umdSignInAction(View v) {
-		WebView view = (WebView) findViewById(R.id.login_page);
-		LayoutParams lp = view.getLayoutParams();    
-		lp.width=1000;   
-		lp.height=1000;   
-		view.setLayoutParams(lp);
+//		WebView view = (WebView) findViewById(R.id.login_page);
+//		LayoutParams lp = view.getLayoutParams();    
+//		lp.width=1000;   
+//		lp.height=1000;   
+//		view.setLayoutParams(lp);
+		umdLoginDialog = ProgressDialog.show(
+				SignInActivity.this, "", "Signing In", true);
 		loginProcess();
 	}
 
@@ -367,12 +370,12 @@ public class SignInActivity extends Activity {
 							if (count == 0) {
 								count++;
 
-								Toast.makeText(SignInActivity.this, "Signed into my.umd.edu!", Toast.LENGTH_SHORT).show();
+								//Toast.makeText(SignInActivity.this, "Signed into my.umd.edu!", Toast.LENGTH_SHORT).show();
 
 								// Wait for completed login using UID       
 								CookieManager manager = CookieManager.getInstance();
-								Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
-								Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
+								//Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
+								//Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
 
 								if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
 									// Sets the webview client for loading and accessing the HTML source of the schedule
@@ -387,7 +390,7 @@ public class SignInActivity extends Activity {
 										@Override
 										public void onPageFinished(WebView view, String url) {
 											if(count == 0) {
-												Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
+												//Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
 												count++;
 
 
@@ -395,7 +398,7 @@ public class SignInActivity extends Activity {
 												view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
 											}
 
-											Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
+											//Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
 										}
 									});
 
@@ -407,48 +410,56 @@ public class SignInActivity extends Activity {
 						}
 					});
 
+					String umd_username = ((EditText) findViewById(R.id.umd_username)).getText().toString();
+					String umd_password = ((EditText) findViewById(R.id.umd_password)).getText().toString();
+
 					view.loadUrl("javascript:(function() { " +  
-							"document.LoginPortletForm.in_tx_username.value='hkau'; " +  
-							"document.LoginPortletForm.in_pw_userpass.value='Pekklerocks94#'; " +
+							"document.LoginPortletForm.in_tx_username.value='" + umd_username + "'; " +  
+							"document.LoginPortletForm.in_pw_userpass.value='" + umd_password + "'; " +
 							"document.LoginPortletForm.submit(); " +
 							"})()");
 				}
 
-				Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
-				
+				//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
+
 				// Wait for completed login using UID       
 				CookieManager manager = CookieManager.getInstance();
-				Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
-				Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
 
 				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-					// Sets the webview client for loading and accessing the HTML source of the schedule
-					view.setWebViewClient(new WebViewClient() {
-						int count = 0;
-						@Override  
-						public boolean shouldOverrideUrlLoading(WebView view, String url)  
-						{  
-							return false; 
-						}  
+					if(!view.getUrl().contains("0")) { // Incorrect login
+						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+						umdLoginDialog.dismiss();
+					} else { // Correct login
+						// Sets the webview client for loading and accessing the HTML source of the schedule
+						view.setWebViewClient(new WebViewClient() {
+							int count = 0;
+							@Override  
+							public boolean shouldOverrideUrlLoading(WebView view, String url)  
+							{  
+								return false; 
+							}  
 
-						@Override
-						public void onPageFinished(WebView view, String url) {
-							if(count == 0) {
-								Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
-								count++;
+							@Override
+							public void onPageFinished(WebView view, String url) {
+								if(count == 0) {
+									//Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
+									count++;
 
 
-								// Load the actual schedule page
-								view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+									// Load the actual schedule page
+									view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+								}
+
+								//Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
 							}
+						});
 
-							Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
-						}
-					});
+						view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
 
-					view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+					}
 				}
-
 
 			}
 		});
@@ -474,31 +485,33 @@ public class SignInActivity extends Activity {
 		@JavascriptInterface
 		public void processHTML(String html)
 		{
-			Toast.makeText(SignInActivity.this, "Herro anybody" + html, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(SignInActivity.this, "Herro anybody" + html, Toast.LENGTH_SHORT).show();
 			WebView scheduleBrowser = (WebView) findViewById(R.id.screenshot_page);
 			//scheduleBrowser.removeJavascriptInterface("HTMLOUT");
 
 			if(count == 0) {
 				count++;
 
-				Toast.makeText(SignInActivity.this, "Processing HTML!" + html, Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, "Processing HTML!" + html, Toast.LENGTH_SHORT).show();
 
 				// Determines the beginning and end of just the schedule
 				int beginIndex = html.indexOf(headerString);
 				int endIndex = html.indexOf("</table>", beginIndex) + 7;
 				if(beginIndex == -1) beginIndex = 0;
-				Toast.makeText(SignInActivity.this, "Indices found" + beginIndex + (endIndex), Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, "Indices found" + beginIndex + (endIndex), Toast.LENGTH_SHORT).show();
 
 				// Crops the substring of HTML source
 				final String scheduleTable = html.substring(beginIndex, endIndex + 1);
 				Log.v("FUCK THIS SHIT", scheduleTable);
 
-				Toast.makeText(SignInActivity.this, "Cropped", Toast.LENGTH_SHORT).show();
-				Toast.makeText(SignInActivity.this, "Schedule: " + scheduleTable, Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, "Cropped", Toast.LENGTH_SHORT).show();
+				//Toast.makeText(SignInActivity.this, "Schedule: " + scheduleTable, Toast.LENGTH_SHORT).show();
 
 
 				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><head><meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale = 1.2'/></head>";
 
+				umdLoginDialog.dismiss();
+				
 				// Take bitmap and send with intent to Schedule Activity
 				Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 

@@ -200,6 +200,12 @@ public class ScheduleActivity extends ActionBarActivity {
 		getMenuInflater().inflate(R.menu.schedule, menu);
 		return true;
 	}
+	
+	@Override
+	public void onBackPressed() {
+		Intent back = new Intent(this, MainActivity.class);
+		startActivity(back);
+	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {

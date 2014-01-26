@@ -80,20 +80,6 @@ public class LoginActivity extends Activity {
 
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				// Inject javascript into hidden WebView in order to transfer username, password, and to sign in
-//				view.loadUrl("javascript: document.lform.in_tx_username.value='hkau'; " +
-//						"document.lform.in_pw_userpass.value='Pekklerocks94#';" +
-//						"avascript: document.getElementById('loginFormID').submit()");
-
-//				view.loadUrl("javascript: document.lform.in_tx_username.value='hkau'");
-//				view.loadUrl("javascript: document.lform.in_pw_userpass.value='Pekklerocks94#'");
-//				view.loadUrl("javascript: document.getElementById('loginFormID').submit()");
-				
-				view.loadUrl("javascript:(function() { " +  
-						"document.lform.in_tx_username.value='hkau'; " +  
-						"document.lform.in_pw_userpass.value='Pekklerocks94#'; " +
-						"document.getElementById('loginFormID').submit(); " +
-						"})()");
 
 				// Wait for completed login using UID       
 				CookieManager manager = CookieManager.getInstance();
