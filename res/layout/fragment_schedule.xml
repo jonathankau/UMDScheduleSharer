@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp" >
+
+    <FrameLayout
+        android:id="@+id/picture_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/circular_prof_red"
+        android:padding="3dp"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/test_prof_pic"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:gravity="center" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/selection_user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:text="Jonathan Kau"
+        android:textColor="#899AA7"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/schedule_frame"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:background="@drawable/white_button"
+        android:gravity="center" >
+
+        <TextView
+            android:id="@+id/main_title"
+            style="@style/CodeFont"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:paddingBottom="25dp"
+            android:text="@string/main_title"
+            android:textSize="28sp"
+            android:visibility="gone" />
+
+        <WebView
+            android:id="@+id/schedule_browser"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scrollbars="none"
+            android:visibility="visible" />
+
+        <!--<ImageView
+            android:id="@+id/schedule_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center" />  -->
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/fb_share"
+        style="@style/RedButton"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/red_button"
+        android:text="Share on Facebook"
+        android:textSize="16sp" />
+
+</LinearLayout>

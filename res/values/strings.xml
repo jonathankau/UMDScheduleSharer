@@ -15,16 +15,17 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-    <string name="title_activity_sign_in">SignInActivity</string>
+    <string name="title_activity_sign_in">Social Scheduler</string>
     <string name="app_id">580519828708344</string>
-    
     <string name="semester_prompt">Choose Semester</string>
-    
+
     <string-array name="semesters_array">
         <item>Spring 2014</item>
         <item>Winter 2014</item>
         <item>Fall 2013</item>
         <item>Summer 2013</item>
     </string-array>
+
+    <string name="title_activity_schedule">Social Scheduler</string>
 
 </resources>

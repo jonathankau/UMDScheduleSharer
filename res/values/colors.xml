@@ -2,6 +2,8 @@
 <resources>
 
     <color name="main_red">#CB2027</color>
+    <color name="dark_red">#99171E</color>
     <color name="transparent">#00000000</color>
+    <color name="bluish_grey">#F5F8FA</color>
 
 </resources>

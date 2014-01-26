@@ -4,14 +4,14 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="19" />
+
     <permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    <uses-sdk
-        android:minSdkVersion="8"
-        android:targetSdkVersion="17" />
 
     <application
         android:allowBackup="true"
@@ -41,18 +41,18 @@
             android:theme="@android:style/Theme.NoTitleBar" >
         </activity>
         <activity
-            android:name="com.kau.jonathan.umdschedulesharer.ScheduleActivity"
-            android:label="@string/title_activity_sign_in"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" >
-        </activity>
-        <activity
-            android:name="com.kau.umdschedulesharer.SignInActivity"
-            android:label="@string/title_activity_sign_in" >
-        </activity>
-        <activity
             android:name="com.facebook.LoginActivity"
             android:theme="@style/Custom_Dialog_Style" >
+        </activity>
+        <activity
+            android:name="com.kau.jonathan.umdschedulesharer.ScheduleActivity"
+            android:label="@string/title_activity_schedule"
+            android:parentActivityName="FragmentActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Red_actionbar_theme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="FragmentActivity" />
         </activity>
 
         <meta-data
@@ -60,4 +60,4 @@
             android:value="@string/app_id" />
     </application>
 
-</manifest>
+</manifest>

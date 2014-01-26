@@ -60,13 +60,15 @@ public class LoginActivity extends Activity {
 		CookieSyncManager.getInstance().startSync();
 		CookieManager.getInstance().setAcceptCookie(true);
 
-		String loadUrl = "http://mobilemy.umd.edu/";
+		String loadUrl = "https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401";
 
 		// Initialize the WebView and edit settings
 		WebView browser = (WebView) findViewById(R.id.login_page);
 		browser.getSettings().setJavaScriptEnabled(true);
 		browser.getSettings().setBuiltInZoomControls(true);
 		browser.getSettings().setDomStorageEnabled(true);
+		browser.clearCache(true);
+		browser.clearHistory();
 
 		// Sets the webview client for the initial my.umd.edu page
 		browser.setWebViewClient(new WebViewClient() {  
@@ -79,9 +81,19 @@ public class LoginActivity extends Activity {
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				// Inject javascript into hidden WebView in order to transfer username, password, and to sign in
-				view.loadUrl("javascript: document.LoginPortletForm.in_tx_username.value='hkau'");
-				view.loadUrl("javascript: document.LoginPortletForm.in_pw_userpass.value='Pekklerocks94#'");
-				view.loadUrl("javascript: document.getElementById('loginFormID').submit()");
+//				view.loadUrl("javascript: document.lform.in_tx_username.value='hkau'; " +
+//						"document.lform.in_pw_userpass.value='Pekklerocks94#';" +
+//						"avascript: document.getElementById('loginFormID').submit()");
+
+//				view.loadUrl("javascript: document.lform.in_tx_username.value='hkau'");
+//				view.loadUrl("javascript: document.lform.in_pw_userpass.value='Pekklerocks94#'");
+//				view.loadUrl("javascript: document.getElementById('loginFormID').submit()");
+				
+				view.loadUrl("javascript:(function() { " +  
+						"document.lform.in_tx_username.value='hkau'; " +  
+						"document.lform.in_pw_userpass.value='Pekklerocks94#'; " +
+						"document.getElementById('loginFormID').submit(); " +
+						"})()");
 
 				// Wait for completed login using UID       
 				CookieManager manager = CookieManager.getInstance();
@@ -108,12 +120,12 @@ public class LoginActivity extends Activity {
 						@Override
 						public void onPageFinished(WebView view, String url) {
 							/* This calls inject JavaScript into the page which just finished loading. */
-							view.loadUrl("javascript:window.HTMLOUT.processHTML('<head>'+document.getElementsByTagName('html')[0].innerHTML+'</head>');");
+							
 						}
 					});
 
 					// Load the actual schedule page
-					view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+					view.loadUrl("javascript:window.HTMLOUT.processHTML('<head>'+document.getElementsByTagName('html')[0].innerHTML+'</head>');");
 				}
 			}
 		});

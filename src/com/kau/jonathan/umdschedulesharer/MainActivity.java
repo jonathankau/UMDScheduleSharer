@@ -64,7 +64,31 @@ public class MainActivity extends Activity {
 
 	// Sign In Method when the user presses the button
 	public void signIntoFacebook(View v) {
+		LoginButton login = (LoginButton)findViewById(R.id.fb_login);
+		login.setSessionStatusCallback(new Session.StatusCallback() {
 
+	           @SuppressWarnings("deprecation")
+			@Override
+	           public void call(Session session, SessionState state, Exception exception) {
+
+	            if (session.isOpened()) {
+	               Log.e("Access Token","Access Token"+ session.getAccessToken());
+	               Request.executeMeRequestAsync(session,new Request.GraphUserCallback() {
+	                      @Override
+	                      public void onCompleted(GraphUser user,Response response) {
+	                          if (user != null) { 
+	                           Log.e("FACEBOOK USER ID","User ID "+ user.getId());
+	                           Log.e("FACEBOOK EMAIL","Email "+ user.asMap().get("email"));
+	                          }
+	                      }
+	                    });
+	                  }
+
+	           }
+	    }); 
+		
+		Session session = Session.getActiveSession();
+		onSessionStateChange(session, session.getState(), null);
 	}
 
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
@@ -77,7 +101,7 @@ public class MainActivity extends Activity {
 			signedIn.putExtra("FB_ID", fb_id);			
 			startActivity(signedIn);
 
-			this.overridePendingTransition(0, 0);
+			//this.overridePendingTransition(0, 0);
 		} else { // Logged out		    
 			findViewById(R.id.main_title).setVisibility(View.VISIBLE);
 			findViewById(R.id.fb_login).setVisibility(View.VISIBLE);
