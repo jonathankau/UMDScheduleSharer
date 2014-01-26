@@ -46,12 +46,40 @@ public class MainActivity extends Activity {
 
 		TextView title = (TextView)findViewById(R.id.main_title);
 		LoginButton login = (LoginButton)findViewById(R.id.fb_login);
+		login.setReadPermissions(Arrays.asList("basic_info"));
 
 		Typeface face=Typeface.createFromAsset(this.getAssets(),
 				"fonts/Lato-Reg.ttf");
 
 		title.setTypeface(face);
 		login.setTypeface(face);		
+		
+//		login.setSessionStatusCallback(new Session.StatusCallback() {
+//
+//			@SuppressWarnings("deprecation")
+//			@Override
+//			public void call(Session session, SessionState state, Exception exception) {
+//
+//				if (session.isOpened()) {
+//					Log.e("Access Token","Access Token"+ session.getAccessToken());
+//					Request.executeMeRequestAsync(session,new Request.GraphUserCallback() {
+//						@Override
+//						public void onCompleted(GraphUser user,Response response) {
+//							if (user != null) { 
+//								String name = "saved_name";
+//								String fb_id = "saved_id";
+//
+//								Intent signedIn = new Intent(MainActivity.this, SignInActivity.class);
+//								signedIn.putExtra("FB_NAME", name);
+//								signedIn.putExtra("FB_ID", fb_id);			
+//								startActivity(signedIn);
+//							}
+//						}
+//					});
+//				}
+//
+//			}
+//		}); 
 
 	}
 
@@ -64,31 +92,18 @@ public class MainActivity extends Activity {
 
 	// Sign In Method when the user presses the button
 	public void signIntoFacebook(View v) {
-		LoginButton login = (LoginButton)findViewById(R.id.fb_login);
-		login.setSessionStatusCallback(new Session.StatusCallback() {
 
-	           @SuppressWarnings("deprecation")
-			@Override
-	           public void call(Session session, SessionState state, Exception exception) {
-
-	            if (session.isOpened()) {
-	               Log.e("Access Token","Access Token"+ session.getAccessToken());
-	               Request.executeMeRequestAsync(session,new Request.GraphUserCallback() {
-	                      @Override
-	                      public void onCompleted(GraphUser user,Response response) {
-	                          if (user != null) { 
-	                           Log.e("FACEBOOK USER ID","User ID "+ user.getId());
-	                           Log.e("FACEBOOK EMAIL","Email "+ user.asMap().get("email"));
-	                          }
-	                      }
-	                    });
-	                  }
-
-	           }
-	    }); 
-		
-		Session session = Session.getActiveSession();
-		onSessionStateChange(session, session.getState(), null);
+//		Session session = Session.getActiveSession();
+//		if (!session.isOpened() && !session.isClosed()) {
+//			session.openForRead(new Session.OpenRequest(this)
+//			.setPermissions(Arrays.asList("basic_info"))
+//			.setCallback(callback));
+//		} else {
+//			Session.openActiveSession(this, true, callback);
+//		}
+//		
+//
+//		onSessionStateChange(session, session.getState(), null);
 	}
 
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
@@ -130,6 +145,7 @@ public class MainActivity extends Activity {
 		// session is not null, the session state change notification
 		// may not be triggered. Trigger it if it's open/closed.
 		Session session = Session.getActiveSession();
+
 		if (session != null &&
 				(session.isOpened() || session.isClosed()) ) {
 			onSessionStateChange(session, session.getState(), null);

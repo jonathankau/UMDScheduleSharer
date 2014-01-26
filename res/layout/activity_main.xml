@@ -36,7 +36,6 @@
         android:background="@drawable/white_button"
         android:id="@+id/fb_login"
         android:text="Login with Facebook" 
-        android:onClick="signIntoFacebook"
         android:visibility="invisible"/>
 
 </LinearLayout>
