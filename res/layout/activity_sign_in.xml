@@ -19,14 +19,7 @@
         android:layout_width="1dp"
         android:layout_height="1dp"
         android:scrollbars="none"
-        android:visibility="visible" />
-    
-       <WebView
-        android:id="@+id/screenshot_page"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
-        android:scrollbars="none"
-        android:visibility="visible" />
+        android:visibility="invisible" />
 
     <TextView
         android:id="@+id/main_title"

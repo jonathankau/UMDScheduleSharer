@@ -1,6 +1,5 @@
 package com.kau.jonathan.umdschedulesharer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,14 +20,13 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.PictureDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
@@ -50,7 +48,6 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.ProfilePictureView;
-import com.kau.jonathan.umdschedulesharer.LoginActivity.MyJavaScriptInterface;
 
 public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;
@@ -140,7 +137,7 @@ public class SignInActivity extends Activity {
 		Session session = Session.getActiveSession();
 		if (session != null && session.isOpened()) {
 			loggingIn = ProgressDialog.show(
-					SignInActivity.this, "", "Signing In", true);
+					SignInActivity.this, "", "Logging into Facebook", true);
 			makeMeRequest(session);
 		}
 
@@ -307,6 +304,8 @@ public class SignInActivity extends Activity {
 //		lp.width=1000;   
 //		lp.height=1000;   
 //		view.setLayoutParams(lp);
+		InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+	    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
 		umdLoginDialog = ProgressDialog.show(
 				SignInActivity.this, "", "Signing In", true);
 		loginProcess();
@@ -486,7 +485,7 @@ public class SignInActivity extends Activity {
 		public void processHTML(String html)
 		{
 			//Toast.makeText(SignInActivity.this, "Herro anybody" + html, Toast.LENGTH_SHORT).show();
-			WebView scheduleBrowser = (WebView) findViewById(R.id.screenshot_page);
+			//WebView scheduleBrowser = (WebView) findViewById(R.id.screenshot_page);
 			//scheduleBrowser.removeJavascriptInterface("HTMLOUT");
 
 			if(count == 0) {
@@ -508,7 +507,7 @@ public class SignInActivity extends Activity {
 				//Toast.makeText(SignInActivity.this, "Schedule: " + scheduleTable, Toast.LENGTH_SHORT).show();
 
 
-				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><head><meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale = 1.2'/></head>";
+				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><head><meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/></head>";
 
 				umdLoginDialog.dismiss();
 				
