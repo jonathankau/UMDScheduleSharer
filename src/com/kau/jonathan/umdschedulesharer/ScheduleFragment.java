@@ -35,7 +35,7 @@ public class ScheduleFragment extends Fragment {
 		// Loads HTML source for just the schedule
 		WebView scheduleBrowser = (WebView) rootView.findViewById(R.id.schedule_browser);
 		scheduleBrowser.getSettings().setLoadWithOverviewMode(true);
-		//scheduleBrowser.getSettings().setUseWideViewPort(true);
+		scheduleBrowser.getSettings().setUseWideViewPort(true);
 		scheduleBrowser.getSettings().setSupportZoom(true);
 		scheduleBrowser.getSettings().setBuiltInZoomControls(true);
 		if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.HONEYCOMB) {

@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -58,6 +59,8 @@ public class SignInActivity extends Activity {
 	TextView username;
 	TextView title;
 	String fb_id;
+	EditText umd_username;
+	EditText umd_password;
 
 	private UiLifecycleHelper uiHelper;
 	private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -72,7 +75,27 @@ public class SignInActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sign_in);
 
-		Intent intent = getIntent();
+		// Check to see if user has gotten schedule already
+		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+		int obtained_schedule = prefs.getInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0);
+
+		if(obtained_schedule == 1) {
+			// Take source and send with intent to Schedule Activity
+			Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
+
+			// Attach source code
+			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));		
+
+
+			// Start activity
+			startActivity(intent);
+		}
+
+		// Set default prof pic
+		Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
+				R.drawable.fb_default);
+		((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(makeCircular(bitmap));
+
 
 		// Generate typefaces		
 		final Typeface face=Typeface.createFromAsset(this.getAssets(),
@@ -123,8 +146,8 @@ public class SignInActivity extends Activity {
 		title = (TextView)findViewById(R.id.main_title);
 		username = (TextView)findViewById(R.id.selection_user_name);
 
-		EditText umd_username = (EditText) findViewById(R.id.umd_username);
-		EditText umd_password = (EditText) findViewById(R.id.umd_password);
+		umd_username = (EditText) findViewById(R.id.umd_username);
+		umd_password = (EditText) findViewById(R.id.umd_password);
 		Button umd_login = (Button) findViewById(R.id.umd_login);
 
 		title.setTypeface(face);
@@ -166,6 +189,7 @@ public class SignInActivity extends Activity {
 				title.setVisibility(View.VISIBLE);
 				findViewById(R.id.login_box).setVisibility(View.VISIBLE);
 				findViewById(R.id.picture_frame).setVisibility(View.VISIBLE);
+				findViewById(R.id.semester_spinner).setVisibility(View.VISIBLE);
 
 				if (session == Session.getActiveSession()) {
 					if (user != null) {
@@ -276,36 +300,49 @@ public class SignInActivity extends Activity {
 
 
 			if (bitmap != null) {
-				Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-						bitmap.getHeight(), Config.ARGB_8888);
-				Canvas canvas = new Canvas(output);
-
-				final int color = 0xff424242;
-				final Paint paint = new Paint();
-				final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-				paint.setAntiAlias(true);
-				canvas.drawARGB(0, 0, 0, 0);
-				paint.setColor(color);
-				canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
-						bitmap.getWidth() / 2, paint);
-				paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
-				canvas.drawBitmap(bitmap, rect, rect, paint);
+				Bitmap output = makeCircular(bitmap);
 
 				((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(output);
 			}
 		}
 	}
 
+	public Bitmap makeCircular(Bitmap bitmap) {
+		Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
+				bitmap.getHeight(), Config.ARGB_8888);
+		Canvas canvas = new Canvas(output);
+
+		final int color = 0xff424242;
+		final Paint paint = new Paint();
+		final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+		paint.setAntiAlias(true);
+		canvas.drawARGB(0, 0, 0, 0);
+		paint.setColor(color);
+		canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
+				bitmap.getWidth() / 2, paint);
+		paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+		canvas.drawBitmap(bitmap, rect, rect, paint);
+
+		return output;
+	}
+
 	// When user presses sign in	
 	public void umdSignInAction(View v) {
-//		WebView view = (WebView) findViewById(R.id.login_page);
-//		LayoutParams lp = view.getLayoutParams();    
-//		lp.width=1000;   
-//		lp.height=1000;   
-//		view.setLayoutParams(lp);
+		//		WebView view = (WebView) findViewById(R.id.login_page);
+		//		LayoutParams lp = view.getLayoutParams();    
+		//		lp.width=1000;   
+		//		lp.height=1000;   
+		//		view.setLayoutParams(lp);
+
+		// Hide keyboard
 		InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
-	    imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+		if(getCurrentFocus() != null) {
+			imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(),      
+					InputMethodManager.HIDE_NOT_ALWAYS);
+		}
+
+		// Show dialog
 		umdLoginDialog = ProgressDialog.show(
 				SignInActivity.this, "", "Signing In", true);
 		loginProcess();
@@ -327,7 +364,6 @@ public class SignInActivity extends Activity {
 		view.getSettings().setDomStorageEnabled(true);
 		view.getSettings().setLoadWithOverviewMode(true);
 		view.getSettings().setUseWideViewPort(true);
-		view.getSettings().setAllowUniversalAccessFromFileURLs(true);
 		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 		view.getSettings().setSavePassword(false);
 		view.getSettings().setSaveFormData(false);
@@ -507,15 +543,21 @@ public class SignInActivity extends Activity {
 				//Toast.makeText(SignInActivity.this, "Schedule: " + scheduleTable, Toast.LENGTH_SHORT).show();
 
 
-				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><head><meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/></head>";
+				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+						"<head><style type='text/css'>html, body {	height: 100%;	padding: 0;	margin: 0;} " +
+						"#table {display: table; 	height: 100%;	width: 100%;} " +
+						"#cell {	display: table-cell; 	vertical-align: middle;}</style></head>";//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
+				//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
+				final String body = "<body><div id='table'><div id='cell'>";
+				final String footer = "</div></div></body></html>";
 
 				umdLoginDialog.dismiss();
-				
-				// Take bitmap and send with intent to Schedule Activity
+
+				// Take source and send with intent to Schedule Activity
 				Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
 				// Attach source code
-				intent.putExtra("SOURCE_CODE", header + scheduleTable);			
+				intent.putExtra("SOURCE_CODE", header + body + scheduleTable + footer);			
 
 
 				// Start activity

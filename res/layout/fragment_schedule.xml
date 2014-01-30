@@ -5,7 +5,8 @@
     android:layout_gravity="center_horizontal"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="20dp" >
+    android:padding="20dp" 
+    android:paddingBottom="25dp">
 
     <FrameLayout
         android:id="@+id/picture_frame"
@@ -73,7 +74,7 @@
     <Button
         android:id="@+id/fb_share"
         style="@style/RedButton"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="25dp"
         android:background="@drawable/red_button"
         android:text="Share on Facebook"
         android:textSize="16sp" />

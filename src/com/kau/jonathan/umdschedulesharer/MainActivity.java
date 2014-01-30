@@ -4,7 +4,9 @@ import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -37,6 +39,22 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Check to see if user has gotten schedule already
+		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+		int obtained_schedule = prefs.getInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0);
+
+		if(obtained_schedule == 1) {
+			// Take source and send with intent to Schedule Activity
+			Intent intent = new Intent(MainActivity.this, ScheduleActivity.class);
+
+			// Attach source code
+			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));		
+
+
+			// Start activity
+			startActivity(intent);
+		}
 
 
 		uiHelper = new UiLifecycleHelper(this, callback);

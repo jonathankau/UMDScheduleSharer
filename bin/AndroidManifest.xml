@@ -46,6 +46,7 @@
         </activity>
         <activity
             android:name="com.kau.jonathan.umdschedulesharer.ScheduleActivity"
+            android:icon="@drawable/ic_icon"
             android:label="@string/title_activity_schedule"
             android:parentActivityName="FragmentActivity"
             android:screenOrientation="portrait"
