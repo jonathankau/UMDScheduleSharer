@@ -5,7 +5,7 @@
     android:layout_gravity="center_horizontal"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="20dp" 
+    android:padding="25dp" 
     android:paddingBottom="25dp">
 
     <FrameLayout
@@ -77,6 +77,7 @@
         android:layout_marginTop="25dp"
         android:background="@drawable/red_button"
         android:text="Share on Facebook"
-        android:textSize="16sp" />
+        android:textSize="16sp" 
+        android:onClick="shareToFacebook"/>
 
 </LinearLayout>

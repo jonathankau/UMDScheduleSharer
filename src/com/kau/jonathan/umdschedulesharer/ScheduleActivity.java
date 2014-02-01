@@ -1,14 +1,25 @@
 package com.kau.jonathan.umdschedulesharer;
 
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Picture;
 import android.graphics.Typeface;
+import android.graphics.drawable.PictureDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -19,7 +30,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,15 +40,181 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewConfiguration;
+import android.webkit.WebView;
 import android.widget.TextView;
 
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.widget.FacebookDialog;
+
 public class ScheduleActivity extends ActionBarActivity {
+	String fbPhotoAddress = null;
 	static final String HTML_SOURCE = "scheduleSource";
 	ViewPager mViewPager;
 	PagerAdapter mPageAdapter;
 	final String[] tabNames = {"Schedule","Classes","Friends"};
 	Bitmap schedule;
 	String schedule_src;
+	private ProgressDialog progressDialog;
+
+	// FB upload graph object
+	private static final String TAG = "ScheduleActivity";
+	static final boolean UPLOAD_IMAGE = true;
+	private static final List<String> PERMISSIONS = Arrays.asList("publish_actions", "user_photos", "read_stream", "access_token");
+	private static final String PENDING_PUBLISH_KEY = "pendingPublishReauthorization";
+	private boolean pendingPublishReauthorization = false;
+
+	private UiLifecycleHelper uiHelper;
+	private Session.StatusCallback callback = new Session.StatusCallback() {
+		@Override
+		public void call(Session session, SessionState state, Exception exception) {
+			onSessionStateChange(session, state, exception);
+		}
+	};
+
+	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+		if (state.isOpened()) {
+			if (pendingPublishReauthorization && 
+					state.equals(SessionState.OPENED_TOKEN_UPDATED)) {
+				pendingPublishReauthorization = false;
+			}
+		} else if (state.isClosed()) {
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		uiHelper.onActivityResult(requestCode, resultCode, data, new FacebookDialog.Callback() {
+			@Override
+			public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
+				Log.e("Activity", String.format("Error: %s", error.toString()));
+			}
+
+			@Override
+			public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
+				Log.i("Activity", "Success!");
+			}
+		});
+	}
+
+	public void shareToFacebook(View v) {
+		Picture screenshot = ((WebView) findViewById(R.id.schedule_browser)).capturePicture();
+		PictureDrawable pictureDrawable = new PictureDrawable(screenshot);
+		Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		canvas.drawPicture(pictureDrawable.getPicture());
+
+		// Crop bitmap by calling function		
+		final Bitmap cropped = cropBitmap(bitmap);
+		//final Bitmap cropped = bitmap;
+
+	
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ScheduleActivity.this);
+
+
+		alertDialogBuilder
+		.setTitle("Share to Facebook")
+		.setMessage("Would you like to post this schedule to your timeline?")
+		.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				Session session = Session.getActiveSession();
+				if (session != null) {
+					// Check for publish permissions    
+					List<String> permissions = session.getPermissions();
+					if (!isSubsetOf(PERMISSIONS, permissions)) {
+						pendingPublishReauthorization = true;
+						Session.NewPermissionsRequest newPermissionsRequest = new Session 
+								.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS);
+						session.requestNewPublishPermissions(newPermissionsRequest);
+					}
+				}
+				
+				// Part 1: create callback to get URL of uploaded photo
+				Request.Callback uploadPhotoRequestCallback = new Request.Callback() {
+					@Override
+					public void onCompleted(Response response) {
+						// safety check
+						if (isFinishing()) {
+							return;
+						}
+						if (response.getError() != null) {  // [IF Failed Posting]
+							Log.d("POTATO", "photo upload problem. Error="+response.getError() );
+						}  //  [ENDIF Failed Posting]
+
+						Object graphResponse = response.getGraphObject().getProperty("id");
+						if (graphResponse == null || !(graphResponse instanceof String) || 
+								TextUtils.isEmpty((String) graphResponse)) { // [IF Failed upload/no results]
+							Log.d("POTATO", "failed photo upload/no response");
+						} else {  // [ELSEIF successful upload]
+							fbPhotoAddress = "https://www.facebook.com/photo.php?fbid=" +graphResponse;
+						}  // [ENDIF successful posting or not]
+					}  // [END onCompleted]
+				}; 
+
+				//Part 2: upload the photo
+				Request request = Request.newUploadPhotoRequest(session, cropped, uploadPhotoRequestCallback);
+				
+				byte[] data = null;
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				cropped.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+				data = baos.toByteArray();
+
+				Bundle postParams = request.getParameters();
+				postParams.putByteArray("picture", data);
+				postParams.putString("message", "Shared with UMD Social Scheduler. Download at www.umdsocialscheduler.com");
+								
+				request.setParameters(postParams);
+
+				request.executeAsync();
+			}
+		})
+		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				dialog.cancel();
+			}
+		});
+
+		AlertDialog alertDialog = alertDialogBuilder.create();
+		alertDialog.show();
+
+		
+		//		// Save bitmap to sdcard			        
+		//		String root = Environment.getExternalStorageDirectory().toString();
+		//		File myDir = new File(root + "/saved_images");    
+		//		myDir.mkdirs();
+		//		Random generator = new Random();
+		//		int n = 10000;
+		//		n = generator.nextInt(n);
+		//		String fname = "Image-"+ n +".jpg";
+		//		File file = new File (myDir, fname);
+		//		if (file.exists ()) file.delete (); 
+		//		try {
+		//			FileOutputStream out = new FileOutputStream(file);
+		//			cropped.compress(Bitmap.CompressFormat.JPEG, 90, out);
+		//			out.flush();
+		//			out.close();
+		//
+		//		} catch (Exception e) {
+		//			e.printStackTrace();
+		//		}
+
+		// Share bitmap			        
+		//publishStory(cropped);
+
+		//		FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(this)
+		//		.setApplicationName("UMD Social Scheduler - Android")
+		//		.setDescription("Shared with UMD Social Scheduler")
+		//		.setPicture(imageUrl)
+		//		.build();
+		//uiHelper.trackPendingDialogCall(shareDialog.present());
+	}
+
+	// Begin Activity code
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +223,9 @@ public class ScheduleActivity extends ActionBarActivity {
 
 		if (savedInstanceState != null) {
 			schedule_src = savedInstanceState.getString(HTML_SOURCE);
+
+			pendingPublishReauthorization = 
+					savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
 		} else {
 			// Process incoming intent data
 			schedule_src = getIntent().getStringExtra("SOURCE_CODE");
@@ -53,6 +235,10 @@ public class ScheduleActivity extends ActionBarActivity {
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 1).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
 		}
+
+		// Setup Facebook lifecycle handler
+		uiHelper = new UiLifecycleHelper(this, callback);
+		uiHelper.onCreate(savedInstanceState);
 
 		// Access layout elements
 		mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -173,9 +359,49 @@ public class ScheduleActivity extends ActionBarActivity {
 					.setCustomView(customView)
 					.setTabListener(tabListener));
 		}
-
-
 	}
+
+	// This function takes the WebView screenshot and crops away a large portion of the white space,
+	// returning the cropped Bitmap file.
+	public Bitmap cropBitmap(Bitmap original) {
+		int x = 0, y = 0, width = 0, height = 0;
+
+		// Calculate lower margin
+		int tempX = original.getWidth() / 2;
+		int tempY = original.getHeight() - 1;
+
+		while(tempY > original.getHeight() && original.getPixel(tempX, tempY) == Color.WHITE) {
+			tempY--;
+		}
+
+		int lowerBound = tempY;
+
+		// Calculate upper margin
+		tempX = original.getWidth() / 2;
+		tempY = 0;
+
+		while(tempY < original.getHeight() && original.getPixel(tempX, tempY) == Color.WHITE) {
+			tempY++;
+		}
+
+		int upperBound = tempY;
+		height = lowerBound - upperBound;
+
+		// Calculate side margin
+		tempX = 0;
+		tempY = original.getHeight() / 5;
+
+		while(tempX < original.getWidth() && original.getPixel(tempX, tempY) == Color.WHITE) {
+			tempX++;
+		}
+
+		x = tempX - 10;
+		width = original.getWidth() - 2 * tempX + 20;
+
+		// Crop bitmap
+		return Bitmap.createBitmap(original, x, upperBound - 10, width, height + 20, null, false);
+	}
+
 
 	// Since this isn't an object collection, use a FragmentPagerAdapter
 	public class PagerAdapter extends FragmentPagerAdapter {
@@ -280,9 +506,48 @@ public class ScheduleActivity extends ActionBarActivity {
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		// Save the user's current game state
 		savedInstanceState.putString(HTML_SOURCE, schedule_src);
+		savedInstanceState.putBoolean(PENDING_PUBLISH_KEY, pendingPublishReauthorization);
 
 		// Always call the superclass so it can save the view hierarchy state
 		super.onSaveInstanceState(savedInstanceState);
+		uiHelper.onSaveInstanceState(savedInstanceState);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		Session session = Session.getActiveSession();
+		if (session != null &&
+				(session.isOpened() || session.isClosed()) ) {
+			onSessionStateChange(session, session.getState(), null);
+		}
+		
+		uiHelper.onResume();
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+		uiHelper.onPause();
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		uiHelper.onDestroy();
+	}
+
+	/*
+	 * Helper method to check a collection for a string.
+	 */
+	private boolean isSubsetOf(Collection<String> subset, Collection<String> superset) {
+		for (String string : subset) {
+			if (!superset.contains(string)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }
