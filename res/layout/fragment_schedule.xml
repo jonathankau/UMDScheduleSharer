@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:facebook="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_horizontal"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="25dp" 
-    android:paddingBottom="25dp">
+    android:padding="25dp"
+    android:paddingBottom="25dp" >
 
     <FrameLayout
         android:id="@+id/picture_frame"
@@ -63,21 +64,34 @@
             android:scrollbars="none"
             android:visibility="visible" />
 
-        <!--<ImageView
+        <!--
+            <ImageView
             android:id="@+id/schedule_img"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center" />  -->
+            android:gravity="center" />
+        -->
     </FrameLayout>
+
+<!--     <com.facebook.widget.LoginButton -->
+<!--         android:id="@+id/fb_share" -->
+<!--         style="@style/RedButton" -->
+<!--         android:layout_marginTop="25dp" -->
+<!--         android:background="@drawable/red_button" -->
+<!--         android:onClick="shareToFacebook" -->
+<!--         android:text="Share on Facebook" -->
+<!--         android:textSize="16sp" -->
+<!--         facebook:login_text="Share on Facebook" -->
+<!--         facebook:logout_text="Share on Facebook" /> -->
 
     <Button
         android:id="@+id/fb_share"
         style="@style/RedButton"
         android:layout_marginTop="25dp"
         android:background="@drawable/red_button"
+        android:onClick="shareToFacebook"
         android:text="Share on Facebook"
-        android:textSize="16sp" 
-        android:onClick="shareToFacebook"/>
+        android:textSize="16sp"/>
 
 </LinearLayout>

@@ -1,5 +1,9 @@
 package com.kau.jonathan.umdschedulesharer;
 
+import java.util.Arrays;
+
+import com.facebook.widget.LoginButton;
+
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -77,6 +81,9 @@ public class ScheduleFragment extends Fragment {
 			}
 		});*/
 
+		// Set facebook permissions
+		Button share = (Button)rootView.findViewById(R.id.fb_share);
+		//share.setPublishPermissions(Arrays.asList("publish_actions", "user_photos", "read_stream", "access_token"));
 
 
 		// Generate typefaces
@@ -87,7 +94,7 @@ public class ScheduleFragment extends Fragment {
 
 		// Set fonts
 		TextView username = (TextView) rootView.findViewById(R.id.selection_user_name);
-		Button share = (Button) rootView.findViewById(R.id.fb_share);
+		//Button share = (Button) rootView.findViewById(R.id.fb_share);
 
 		username.setTypeface(face);
 		share.setTypeface(face);
