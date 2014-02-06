@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewConfiguration;
 import android.webkit.WebView;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,6 +62,7 @@ public class ScheduleActivity extends ActionBarActivity {
 	Bitmap schedule;
 	String schedule_src;
 	private ProgressDialog progressDialog;
+	String accessToken = "";
 
 	// FB upload graph object
 	private static final String TAG = "ScheduleActivity";
@@ -78,7 +80,13 @@ public class ScheduleActivity extends ActionBarActivity {
 	};
 
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
-		if (state.isOpened()) {
+		if (state.isOpened()) {			
+			if(session != null) {
+				Toast.makeText(ScheduleActivity.this, session.getAccessToken(), Toast.LENGTH_SHORT).show();
+				
+				accessToken = session.getAccessToken();
+			}
+
 			if (pendingPublishReauthorization && 
 					state.equals(SessionState.OPENED_TOKEN_UPDATED)) {
 				pendingPublishReauthorization = false;
@@ -108,31 +116,31 @@ public class ScheduleActivity extends ActionBarActivity {
 		Session session = Session.getActiveSession();
 
 		if (session == null) {
-		    session = new Session.Builder(this).setApplicationId("580519828708344").build();
+			session = new Session.Builder(this).setApplicationId("580519828708344").build();
 
-		    Session.setActiveSession(session);
-		    session.addCallback(new StatusCallback() {
-		        public void call(Session session, SessionState state, Exception exception) {
-		            if (state == SessionState.OPENED) {
-		                Session.OpenRequest openRequest = new Session.OpenRequest(ScheduleActivity.this);
-		                openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
-		                session.openForRead(openRequest);
-		                session.requestNewPublishPermissions(
-		                        new Session.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS));
-		            }
-		            else if (state == SessionState.OPENED_TOKEN_UPDATED) {
-		            }
-		            else if (state == SessionState.CLOSED_LOGIN_FAILED) {
-		                session.closeAndClearTokenInformation();
-		                // Possibly finish the activity
-		            }
-		            else if (state == SessionState.CLOSED) {
-		                session.close();
-		                // Possibly finish the activity
-		            }
-		        }});
-		    
-		    
+			Session.setActiveSession(session);
+			session.addCallback(new StatusCallback() {
+				public void call(Session session, SessionState state, Exception exception) {
+					if (state == SessionState.OPENED) {
+						Session.OpenRequest openRequest = new Session.OpenRequest(ScheduleActivity.this);
+						openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
+						session.openForRead(openRequest);
+						session.requestNewPublishPermissions(
+								new Session.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS));
+					}
+					else if (state == SessionState.OPENED_TOKEN_UPDATED) {
+					}
+					else if (state == SessionState.CLOSED_LOGIN_FAILED) {
+						session.closeAndClearTokenInformation();
+						// Possibly finish the activity
+					}
+					else if (state == SessionState.CLOSED) {
+						session.close();
+						// Possibly finish the activity
+					}
+				}});
+
+
 		} else {
 			List<String> permissions = session.getPermissions();
 			if (!isSubsetOf(PERMISSIONS, permissions)) {
@@ -146,18 +154,18 @@ public class ScheduleActivity extends ActionBarActivity {
 		}
 
 		if (!session.isOpened()) {
-		    Session.OpenRequest openRequest = new Session.OpenRequest(this);
-		    openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
-		    session.openForRead(openRequest);
+			Session.OpenRequest openRequest = new Session.OpenRequest(this);
+			openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
+			session.openForRead(openRequest);
 		}
-			
-		
+
+
 
 	}
-	
+
 	public void publishFacebook() {
 		WebView content = (WebView) findViewById(R.id.schedule_browser);
-        content.setDrawingCacheEnabled(true);
+		content.setDrawingCacheEnabled(true);
 		Picture screenshot = content.capturePicture();
 		PictureDrawable pictureDrawable = new PictureDrawable(screenshot);
 		Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
@@ -174,10 +182,10 @@ public class ScheduleActivity extends ActionBarActivity {
 
 		alertDialogBuilder
 		.setTitle("Share to Facebook")
-		.setMessage("Would you like to post this schedule to your timeline?")
+		.setMessage("Would you like to post this schedule directly to your timeline?")
 		.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {				
-			
+
 				Session session = Session.getActiveSession();
 
 				// Part 1: create callback to get URL of uploaded photo
@@ -193,8 +201,6 @@ public class ScheduleActivity extends ActionBarActivity {
 						}  //  [ENDIF Failed Posting]
 
 						try {
-							//String imageUrl = response.getGraphObject().getInnerJSONObject().getString("uri");
-							//Toast.makeText(ScheduleActivity.this, imageUrl, Toast.LENGTH_SHORT).show();
 						} catch (NullPointerException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -205,7 +211,7 @@ public class ScheduleActivity extends ActionBarActivity {
 
 				//Part 2: upload the photo
 				Request request = Request.newUploadPhotoRequest(session, cropped, uploadPhotoRequestCallback);
-				
+
 				byte[] data = null;
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				cropped.compress(Bitmap.CompressFormat.JPEG, 100, baos);
@@ -218,10 +224,10 @@ public class ScheduleActivity extends ActionBarActivity {
 				request.setParameters(postParams);
 
 				request.executeAsync();
-				
+
 				Toast.makeText(ScheduleActivity.this, "Schedule posted to timeline!", Toast.LENGTH_SHORT).show();
-				
-				
+
+
 			}
 		})
 		.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -234,25 +240,25 @@ public class ScheduleActivity extends ActionBarActivity {
 		alertDialog.show();
 
 
-//		// Save bitmap to sdcard			        
-//		String root = Environment.getExternalStorageDirectory().toString();
-//		File myDir = new File(root + "/saved_images");    
-//		myDir.mkdirs();
-//		Random generator = new Random();
-//		int n = 10000;
-//		n = generator.nextInt(n);
-//		String fname = "Image-"+ n +".jpg";
-//		File file = new File (myDir, fname);
-//		if (file.exists ()) file.delete (); 
-//		try {
-//			FileOutputStream out = new FileOutputStream(file);
-//			cropped.compress(Bitmap.CompressFormat.JPEG, 90, out);
-//			out.flush();
-//			out.close();
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
+		//		// Save bitmap to sdcard			        
+		//		String root = Environment.getExternalStorageDirectory().toString();
+		//		File myDir = new File(root + "/saved_images");    
+		//		myDir.mkdirs();
+		//		Random generator = new Random();
+		//		int n = 10000;
+		//		n = generator.nextInt(n);
+		//		String fname = "Image-"+ n +".jpg";
+		//		File file = new File (myDir, fname);
+		//		if (file.exists ()) file.delete (); 
+		//		try {
+		//			FileOutputStream out = new FileOutputStream(file);
+		//			cropped.compress(Bitmap.CompressFormat.JPEG, 90, out);
+		//			out.flush();
+		//			out.close();
+		//
+		//		} catch (Exception e) {
+		//			e.printStackTrace();
+		//		}
 
 		// Share bitmap			        
 		//publishStory(cropped);
@@ -286,7 +292,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 1).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
 		}
-		
+
 		// Setup Facebook lifecycle handler
 		uiHelper = new UiLifecycleHelper(this, callback);
 		uiHelper.onCreate(savedInstanceState);
@@ -403,25 +409,7 @@ public class ScheduleActivity extends ActionBarActivity {
 					.setCustomView(customView)
 					.setTabListener(tabListener));
 		}
-		
-		
-//		// Set up facebook permissions
-//		
-//		Session session = Session.getActiveSession();
-//		if (session != null) {
-//			// Check for publish permissions    
-//			List<String> permissions = session.getPermissions();
-//			if (!isSubsetOf(PERMISSIONS, permissions)) {
-//				pendingPublishReauthorization = true;
-//				Session.NewPermissionsRequest newPermissionsRequest = new Session 
-//						.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS);
-//				session.requestNewPublishPermissions(newPermissionsRequest);
-//				Toast.makeText(ScheduleActivity.this, "Permissions requested", Toast.LENGTH_SHORT).show();
-//			} else {
-//				Toast.makeText(ScheduleActivity.this, "Permissions already obtained", Toast.LENGTH_SHORT).show();
-//			}
-//		}
-		
+
 	}
 
 	// This function takes the WebView screenshot and crops away a large portion of the white space,
@@ -478,6 +466,8 @@ public class ScheduleActivity extends ActionBarActivity {
 
 			if(i == 0) {
 				fragment = new ScheduleFragment();
+			} else if(i == 1) {
+				fragment = new ClassesFragment();
 			} else {
 				fragment = new DummySectionFragment();
 			}

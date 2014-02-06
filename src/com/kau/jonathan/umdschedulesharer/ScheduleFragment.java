@@ -48,42 +48,8 @@ public class ScheduleFragment extends Fragment {
 		}
 		scheduleBrowser.loadData(((ScheduleActivity) getActivity()).schedule_src, "text/html", null);
 
-		// Set schedule img		
-		/*final ImageView schedule_img = (ImageView) rootView.findViewById(R.id.schedule_img);
-		schedule = ((ScheduleActivity) getActivity()).schedule;
-
-		final FrameLayout frame = (FrameLayout) rootView.findViewById(R.id.schedule_frame);
-
-		// Resize and fit bitmap
-		Bitmap scaled = getResizedBitmap(schedule, (int) (schedule.getHeight()*1.2), (int) (schedule.getWidth()*1.2));
-		schedule_img.setImageBitmap(schedule);
-/*		final ViewTreeObserver observer= frame.getViewTreeObserver();
-		observer.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-			@SuppressLint("NewApi")
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onGlobalLayout() {
-				ViewTreeObserver obs = frame.getViewTreeObserver();
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-		            obs.removeOnGlobalLayoutListener(this);
-		        } else {
-		            obs.removeGlobalOnLayoutListener(this);
-		        }
-
-				int new_height = frame.getHeight();
-				int new_width = (int) ((new_height / schedule.getHeight()) * schedule.getWidth() * 1.5);
-
-				Toast.makeText(getActivity(), "Height: " + new_height + " Width: " + new_width, Toast.LENGTH_SHORT).show();
-
-				Bitmap scaled = getResizedBitmap(schedule, new_height, new_width);
-
-				schedule_img.setImageBitmap(scaled);
-			}
-		});*/
-
 		// Set facebook permissions
 		Button share = (Button)rootView.findViewById(R.id.fb_share);
-		//share.setPublishPermissions(Arrays.asList("publish_actions", "user_photos", "read_stream", "access_token"));
 
 
 		// Generate typefaces
@@ -94,7 +60,6 @@ public class ScheduleFragment extends Fragment {
 
 		// Set fonts
 		TextView username = (TextView) rootView.findViewById(R.id.selection_user_name);
-		//Button share = (Button) rootView.findViewById(R.id.fb_share);
 
 		username.setTypeface(face);
 		share.setTypeface(face);
