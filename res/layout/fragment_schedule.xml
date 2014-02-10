@@ -43,19 +43,10 @@
         android:layout_height="0dp"
         android:layout_gravity="center"
         android:layout_weight="1"
-        android:background="@drawable/white_button"
-        android:gravity="center" >
-
-        <TextView
-            android:id="@+id/main_title"
-            style="@style/CodeFont"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:paddingBottom="25dp"
-            android:text="@string/main_title"
-            android:textSize="28sp"
-            android:visibility="gone" />
+        android:background="@drawable/bg_card_white"
+        android:gravity="center" 
+        android:paddingRight="20dp"
+        android:paddingLeft="20dp">
 
         <WebView
             android:id="@+id/schedule_browser"

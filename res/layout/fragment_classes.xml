@@ -11,7 +11,7 @@
         android:layout_height="0dp"
         android:layout_gravity="center"
         android:layout_weight="1"
-        android:background="@drawable/white_button"
+        android:background="@drawable/bg_card_white"
         android:gravity="center" >
 
         <TextView

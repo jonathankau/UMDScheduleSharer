@@ -331,7 +331,7 @@ public class SignInActivity extends Activity {
 	public void umdSignInAction(View v) {
 		umd_username = (EditText) findViewById(R.id.umd_username);
 		umd_password = (EditText) findViewById(R.id.umd_password);
-		
+
 		if(umd_username != null && umd_password != null && 
 				umd_username.getText().toString().trim().length() > 0 && umd_password.getText().toString().trim().length() > 0) {
 
@@ -550,77 +550,54 @@ public class SignInActivity extends Activity {
 				int beginIndex = html.indexOf(headerString);
 				int endIndex = html.indexOf("</table>", beginIndex) + 7;
 				if(beginIndex == -1) beginIndex = 0;
-				//Toast.makeText(SignInActivity.this, "Indices found" + beginIndex + (endIndex), Toast.LENGTH_SHORT).show();
-
+				
 				// Crops the substring of HTML source
 				final String scheduleTable = html.substring(beginIndex, endIndex + 1);
-				Log.v("FUCK THIS SHIT", scheduleTable);
+				
+				// Find beginning and end of comment for schedule data
+				int beginComment = html.indexOf("<!-- data size:");
+				int endComment = html.indexOf("-->", beginComment);
+				
+				final String scheduleData = html.substring(beginComment, endComment + 1);
 
-				//Toast.makeText(SignInActivity.this, "Cropped", Toast.LENGTH_SHORT).show();
-				//Toast.makeText(SignInActivity.this, "Schedule: " + scheduleTable, Toast.LENGTH_SHORT).show();
+				if(html.indexOf("An Error occurred while running this application.") != -1) { // Encountered error
+					Toast.makeText(SignInActivity.this, "An Error occurred while running this application. " +
+							"Please try again. If the problem persists, contact the Office of the Registrar " +
+							"at registrar-help@umd.edu or (301)314-8240.", Toast.LENGTH_LONG).show();
+					umdLoginDialog.dismiss();
+				} else {
 
+					float densityDPI = getResources().getDisplayMetrics().density; 
+					double zoom = 1;
+					double height = 100;
+					if (densityDPI > 1.5) {
+						zoom = 1.35;
+						height = 110;
+					}
 
-				final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-						"<head><style type='text/css'>html, body {	height: 100%;	padding: 0;	margin: 0;} " +
-						"#table {display: table; 	height: 100%;	width: 100%;} " +
-						"#cell {	display: table-cell; 	vertical-align: middle;}</style></head>";//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
-				//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
-				final String body = "<body><div id='table'><div id='cell'>";
-				final String footer = "</div></div></body></html>";
+					final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+							"<head><style type='text/css'>html, body {	zoom:" + zoom + "; height: 100%;	padding: 0;	margin: 0;} " +
+							"#table {display: table; 	height: 100%;	width: 100%;} " +
+							"#cell {	display: table-cell; 	vertical-align: middle;}</style></head>";
+					final String body = "<body><div id='table'><div id='cell'>";
+					final String footer = "<br><font size=+2><b>www.umdsocialscheduler.com</b></font></div></div></body></html>";
 
-				umdLoginDialog.dismiss();
+					//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
+					//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
 
-				// Take source and send with intent to Schedule Activity
-				Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
+					umdLoginDialog.dismiss();
 
-				// Attach source code
-				intent.putExtra("SOURCE_CODE", header + body + scheduleTable + footer);			
+					// Take source and send with intent to Schedule Activity
+					Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
-
-				// Start activity
-				startActivity(intent);
-
-				// Take screenshot of Webview and convert to Bitmap
-				//scheduleBrowser.setVisibility(View.GONE);
-
-
-				// Sets the WebView which will just hold the schedule itself
-				//				scheduleBrowser.setPictureListener(new PictureListener() {  
-				//					int count = 0;
-				//
-				//					public void onNewPicture(WebView view, Picture picture) {
-				//						if(count == 0) {
-				//							count++;							
-
-
-				//							Picture screenshot = view.capturePicture();
-				//							Toast.makeText(SignInActivity.this, "Height: " + screenshot.getHeight() + " Width: " + screenshot.getWidth(), Toast.LENGTH_SHORT).show();
-				//
-				//							PictureDrawable pictureDrawable = new PictureDrawable(screenshot);
-				//							Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
-				//							Canvas canvas = new Canvas(bitmap);
-				//							canvas.drawPicture(pictureDrawable.getPicture());
-				//
-				//							// Crop bitmap by calling function		
-				//							Bitmap cropped = bitmap;
-				//
-				//
-				//							//Convert to byte array
-				//							ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				//							cropped.compress(Bitmap.CompressFormat.PNG, 100, stream);
-				//							byte[] byteArray = stream.toByteArray();
-				//							intent.putExtra("image",byteArray);
-
-				//						
-				//						}
-				//
-				//					}
-				//				});
+					// Attach source code + data
+					intent.putExtra("SOURCE_CODE", header + body + scheduleTable + footer);	
+					intent.putExtra("SCHEDULE_DATA", scheduleData);	
 
 
-				// Loads HTML source for just the schedule
-				//scheduleBrowser.loadData(header + scheduleTable, "text/html", null);
-
+					// Start activity
+					startActivity(intent);
+				}
 			}    
 		}
 	}

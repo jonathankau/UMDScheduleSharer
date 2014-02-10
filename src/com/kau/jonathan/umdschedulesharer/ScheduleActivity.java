@@ -4,7 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
@@ -40,7 +44,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewConfiguration;
 import android.webkit.WebView;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,13 +59,17 @@ import com.facebook.widget.FacebookDialog;
 public class ScheduleActivity extends ActionBarActivity {
 	String fbPhotoAddress = null;
 	static final String HTML_SOURCE = "scheduleSource";
+	static final String SCHEDULE_DATA = "SCHEDULE_DATA";
 	ViewPager mViewPager;
 	PagerAdapter mPageAdapter;
 	final String[] tabNames = {"Schedule","Classes","Friends"};
 	Bitmap schedule;
 	String schedule_src;
+	String schedule_data;
 	private ProgressDialog progressDialog;
 	String accessToken = "";
+
+	HashMap<String, String> classes = new LinkedHashMap<String, String>();
 
 	// FB upload graph object
 	private static final String TAG = "ScheduleActivity";
@@ -82,8 +89,8 @@ public class ScheduleActivity extends ActionBarActivity {
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 		if (state.isOpened()) {			
 			if(session != null) {
-				Toast.makeText(ScheduleActivity.this, session.getAccessToken(), Toast.LENGTH_SHORT).show();
-				
+				//Toast.makeText(ScheduleActivity.this, session.getAccessToken(), Toast.LENGTH_SHORT).show();
+
 				accessToken = session.getAccessToken();
 			}
 
@@ -260,15 +267,6 @@ public class ScheduleActivity extends ActionBarActivity {
 		//			e.printStackTrace();
 		//		}
 
-		// Share bitmap			        
-		//publishStory(cropped);
-
-		//		FacebookDialog shareDialog = new FacebookDialog.ShareDialogBuilder(this)
-		//		.setApplicationName("UMD Social Scheduler - Android")
-		//		.setDescription("Shared with UMD Social Scheduler")
-		//		.setPicture(imageUrl)
-		//		.build();
-		//uiHelper.trackPendingDialogCall(shareDialog.present());
 	}
 
 	// Begin Activity code
@@ -279,18 +277,30 @@ public class ScheduleActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_schedule);
 
 		if (savedInstanceState != null) {
+			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
 			schedule_src = savedInstanceState.getString(HTML_SOURCE);
+			schedule_data = savedInstanceState.getString(SCHEDULE_DATA);
 
 			pendingPublishReauthorization = 
 					savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
 		} else {
 			// Process incoming intent data
 			schedule_src = getIntent().getStringExtra("SOURCE_CODE");
+			schedule_data = getIntent().getStringExtra("SCHEDULE_DATA");
 
 			// Save data for later use
 			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 1).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_data", schedule_data).commit();
+		}
+
+		// Parse schedule data to figure out classes
+		
+		
+		if(schedule_data != null) {
+			classes = parseScheduleData(schedule_data);
+			Toast.makeText(ScheduleActivity.this, classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 		}
 
 		// Setup Facebook lifecycle handler
@@ -446,11 +456,16 @@ public class ScheduleActivity extends ActionBarActivity {
 			tempX++;
 		}
 
-		x = tempX - 10;
-		width = original.getWidth() - 2 * tempX + 20;
+		x = tempX;
+		width = original.getWidth() - 2 * tempX;
+
+		if(x >= 10) {
+			x -= 10;
+			width -= 20;
+		}
 
 		// Crop bitmap
-		return Bitmap.createBitmap(original, x, upperBound - 10, width, height + 20, null, false);
+		return Bitmap.createBitmap(original, x, upperBound - 20, width, height + 20, null, false);
 	}
 
 
@@ -469,7 +484,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			} else if(i == 1) {
 				fragment = new ClassesFragment();
 			} else {
-				fragment = new DummySectionFragment();
+				fragment = new FriendsFragment();
 			}
 			return fragment;
 		}
@@ -546,6 +561,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_data", schedule_data).commit();
 
 			startActivity(back);
 			return true;
@@ -557,8 +573,9 @@ public class ScheduleActivity extends ActionBarActivity {
 
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
-		// Save the user's current game state
+		// Save the user's current state
 		savedInstanceState.putString(HTML_SOURCE, schedule_src);
+		savedInstanceState.putString(SCHEDULE_DATA, schedule_data);
 		savedInstanceState.putBoolean(PENDING_PUBLISH_KEY, pendingPublishReauthorization);
 
 		// Always call the superclass so it can save the view hierarchy state
@@ -601,6 +618,21 @@ public class ScheduleActivity extends ActionBarActivity {
 			}
 		}
 		return true;
+	}
+
+	public HashMap<String, String> parseScheduleData(String incoming) {
+		HashMap<String, String> output = new LinkedHashMap<String, String>();
+
+		String REGEX = "C(\\S*)\\s(\\S*)A";
+		Pattern p = Pattern.compile(REGEX);
+		Matcher m = p.matcher(incoming);
+
+		while(m.find()) {
+			output.put(m.group(1), m.group(2));
+			//Toast.makeText(ScheduleActivity.this, m.group(1) + " " + m.group(2), Toast.LENGTH_SHORT).show();
+		}
+
+		return output;
 	}
 
 }

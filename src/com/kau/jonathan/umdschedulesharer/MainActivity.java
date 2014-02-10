@@ -49,7 +49,8 @@ public class MainActivity extends Activity {
 			Intent intent = new Intent(MainActivity.this, ScheduleActivity.class);
 
 			// Attach source code
-			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));		
+			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));	
+			intent.putExtra("SCHEDULE_DATA", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_data", ""));
 
 
 			// Start activity

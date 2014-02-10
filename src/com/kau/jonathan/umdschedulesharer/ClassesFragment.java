@@ -95,9 +95,9 @@ public class ClassesFragment extends Fragment {
 		}
 		
 		protected void onPostExecute(Void v) {	  
-	        Toast.makeText(getActivity(), url, Toast.LENGTH_SHORT).show();
-	        Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
-	        Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
+	        //Toast.makeText(getActivity(), url, Toast.LENGTH_SHORT).show();
+	        //Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
+	        //Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
 		}
 	}
 

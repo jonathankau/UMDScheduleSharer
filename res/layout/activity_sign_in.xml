@@ -81,7 +81,7 @@
         android:id="@+id/login_box"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/white_button"
+        android:background="@drawable/bg_card_white"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:visibility="gone" >
@@ -92,7 +92,6 @@
             android:layout_width="190dp"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
-            android:layout_marginTop="10dp"
             android:background="@drawable/apptheme_edit_text_holo_light"
             android:hint="Directory ID" />
 
@@ -113,7 +112,6 @@
             android:layout_gravity="center"
             android:background="#00000000"
             android:onClick="umdSignInAction"
-            android:paddingBottom="10dp"
             android:text="Sign In"
             android:textColor="@drawable/red_text_button"
             android:textSize="16dp" />
