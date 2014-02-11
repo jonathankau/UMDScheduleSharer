@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.BaseAdapter;
@@ -103,7 +104,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		if(classesText != "") {
 			holder.num_classes.setText(classesText);
 		} else {
-			holder.num_classes.setText("No mutual classes");
+			holder.num_classes.setText("No Mutual Classes");
 		}
 
 		holder.text.setText(fdh.getName());
@@ -126,12 +127,11 @@ final class PicassoSampleAdapter extends BaseAdapter {
 					Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
 					int DisplayWidth = (int) (display.getWidth() * .90);
-					int DisplayHeight = (int) (display.getHeight() * .65);
 
 					// Set your dialog width and height dynamically as per your screen.
 
 					Window window = dialog.getWindow();
-					window.setLayout(DisplayWidth , DisplayHeight);
+					window.setLayout(DisplayWidth , LayoutParams.WRAP_CONTENT);
 					window.setGravity(Gravity.CENTER);
 
 					dialog.show();
@@ -233,8 +233,19 @@ final class PicassoSampleAdapter extends BaseAdapter {
 			TouchImageView sched = (TouchImageView) dialog.findViewById(R.id.friend_img);
 
 			if(img != null) {
-				sched.setImageBitmap(img);
-				//Toast.makeText(context, "hallo", //Toast.LENGTH_SHORT).show();
+				
+				Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+				int DisplayWidth = (int) (display.getWidth() * .90);
+				float floatHeight = (((float) DisplayWidth / (float) img.getWidth()) * (float) img.getHeight());
+				int DisplayHeight = (int) floatHeight;
+				
+				sched.setImageBitmap(Bitmap.createScaledBitmap(img, DisplayWidth, DisplayHeight, false));
+
+				
+				Window window = dialog.getWindow();
+				window.setLayout(DisplayWidth, DisplayHeight);
+				window.setGravity(Gravity.CENTER);
 			}
 
 			dialog.findViewById(R.id.dialog_progress).setVisibility(View.GONE);

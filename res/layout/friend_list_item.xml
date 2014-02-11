@@ -39,7 +39,7 @@
                 android:id="@+id/shared_classes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No mutual classes"
+                android:text="No Mutual Classes"
                 android:textColor="@color/light_red"
                 android:textSize="14sp" >
             </TextView>
