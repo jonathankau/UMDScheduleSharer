@@ -308,19 +308,33 @@ public class SignInActivity extends Activity {
 	}
 
 	public Bitmap makeCircular(Bitmap bitmap) {
-		Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-				bitmap.getHeight(), Config.ARGB_8888);
+		Bitmap output;
+		if(bitmap.getWidth() >= bitmap.getHeight()){
+			output = Bitmap.createBitmap(bitmap.getHeight(),
+					bitmap.getHeight(), Config.ARGB_8888);
+		} else {
+			output = Bitmap.createBitmap(bitmap.getWidth(),
+					bitmap.getWidth(), Config.ARGB_8888);
+		}
 		Canvas canvas = new Canvas(output);
 
 		final int color = 0xff424242;
 		final Paint paint = new Paint();
-		final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+		Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
 
 		paint.setAntiAlias(true);
 		canvas.drawARGB(0, 0, 0, 0);
 		paint.setColor(color);
-		canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
-				bitmap.getWidth() / 2, paint);
+		if(bitmap.getWidth() >= bitmap.getHeight()){
+			rect = new Rect(0, 0, bitmap.getHeight(), bitmap.getHeight());
+			canvas.drawCircle(bitmap.getHeight() / 2, bitmap.getHeight() / 2,
+					bitmap.getHeight() / 2, paint);
+		} else {
+
+			rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getWidth());
+			canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getWidth() / 2,
+					bitmap.getWidth() / 2, paint);
+		}
 		paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
 		canvas.drawBitmap(bitmap, rect, rect, paint);
 
@@ -550,14 +564,14 @@ public class SignInActivity extends Activity {
 				int beginIndex = html.indexOf(headerString);
 				int endIndex = html.indexOf("</table>", beginIndex) + 7;
 				if(beginIndex == -1) beginIndex = 0;
-				
+
 				// Crops the substring of HTML source
 				final String scheduleTable = html.substring(beginIndex, endIndex + 1);
-				
+
 				// Find beginning and end of comment for schedule data
 				int beginComment = html.indexOf("<!-- data size:");
 				int endComment = html.indexOf("-->", beginComment);
-				
+
 				final String scheduleData = html.substring(beginComment, endComment + 1);
 
 				if(html.indexOf("An Error occurred while running this application.") != -1) { // Encountered error
