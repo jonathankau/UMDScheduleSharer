@@ -2,25 +2,33 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="25dp" >
+    android:gravity="center"
+    android:orientation="vertical">
 
-    <FrameLayout
-        android:id="@+id/blank_frame"
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:background="@drawable/bg_card_white"
-        android:gravity="center" >
+   <FrameLayout
+        android:id="@+id/classes_progress_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" 
+        android:visibility="gone" 
+        android:gravity="center">
 
-        <TextView
-            android:id="@+id/test_text"
-            android:layout_gravity="center"
+        <ProgressBar
+            android:id="@+id/classes_progress_bar"
+            style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView" />
-
+            android:gravity="center"
+            android:layout_gravity="center">
+        </ProgressBar>
     </FrameLayout>
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:divider="@null"
+        android:orientation="vertical" />
+
 
 </LinearLayout>
