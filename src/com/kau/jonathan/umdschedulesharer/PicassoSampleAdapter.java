@@ -2,8 +2,6 @@ package com.kau.jonathan.umdschedulesharer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -15,17 +13,24 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,7 +53,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		data = parsed;
 		this.classes = classes;
 		this.accessToken = accessToken;
-		
+
 
 		// Set typeface of text elements in page
 		face=Typeface.createFromAsset(context.getAssets(),
@@ -56,11 +61,11 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		lightface=Typeface.createFromAsset(context.getAssets(),
 				"fonts/Lato-Lig.ttf");
 	}
-
-	@Override
-	public boolean isEnabled(int position) {
-		return false;
-	}
+	//
+	//	@Override
+	//	public boolean isEnabled(int position) {
+	//		return true; // false to disable click
+	//	}
 
 	@Override public int getCount() {
 		return data.size();
@@ -79,6 +84,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		if (view == null) {
 			view = LayoutInflater.from(context).inflate(R.layout.friend_list_item, parent, false);
 			holder = new ViewHolder();
+			holder.friend_schedule = (Button) view.findViewById(R.id.friend_schedule);
 			holder.image = (ImageView) view.findViewById(R.id.friend_pic);
 			holder.text = (TextView) view.findViewById(R.id.friend_name);
 			holder.num_classes = (TextView) view.findViewById(R.id.shared_classes);			
@@ -89,9 +95,10 @@ final class PicassoSampleAdapter extends BaseAdapter {
 			holder = (ViewHolder) view.getTag();
 		}
 
+
 		// Build Shared Classes text
 		FriendDataHolder fdh = getItem(position);
-		
+
 		String classesText = fdh.getClassesText();		
 		if(classesText != "") {
 			holder.num_classes.setText(classesText);
@@ -100,11 +107,54 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		}
 
 		holder.text.setText(fdh.getName());
-		
+
+		// Show button if schedule sharing allowed
+		if(fdh.isAllowShare()) {
+			holder.friend_schedule.setVisibility(View.VISIBLE);			
+
+			final long fb_id = getItemId(position);
+
+			OnClickListener yourClickListener = new OnClickListener() {
+				public void onClick(View v) {
+
+					// Open image dialog
+					Dialog dialog = new Dialog(context);
+					dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+					dialog.setContentView(R.layout.dialog_image);
+
+
+					Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+					int DisplayWidth = (int) (display.getWidth() * .90);
+					int DisplayHeight = (int) (display.getHeight() * .65);
+
+					// Set your dialog width and height dynamically as per your screen.
+
+					Window window = dialog.getWindow();
+					window.setLayout(DisplayWidth , DisplayHeight);
+					window.setGravity(Gravity.CENTER);
+
+					dialog.show();
+
+					SpecialParams params = new SpecialParams();
+					params.dialog = dialog;
+					params.fb_id = fb_id;
+
+					new RetrieveScheduleImg().execute(params);
+
+
+				}
+			};
+
+			holder.friend_schedule.setOnClickListener(yourClickListener);
+		} else {
+			holder.friend_schedule.setVisibility(View.GONE);
+		}
+
 
 		// Trigger the download of the URL asynchronously into the image view.
 		String imageUrl= "http://graph.facebook.com/" + getItemId(position) + "/picture?type=square";
-		
+
 		Picasso.with(context)
 		.load(imageUrl)
 		.placeholder(R.drawable.fb_default)
@@ -113,107 +163,91 @@ final class PicassoSampleAdapter extends BaseAdapter {
 		return view;
 	}
 
-//	private class RetrieveClassesTask extends AsyncTask <SpecialParams,Void,Void>{
-//		String classesText = "";
-//		Set<String> output;
-//		boolean success;
-//		SpecialParams p;
-//		int position;
-//
-//		@Override
-//		protected Void doInBackground(SpecialParams... p) {
-//			this.p = p[0];
-//			this.position = p[0].position;
-//			long facebook_id = getItemId(position);		
-//
-//			HttpClient httpClient = new DefaultHttpClient();  
-//
-//			String url = "http://www.umdsocialscheduler.com/access?access_token=" + accessToken;
-//			HttpGet httpGet = new HttpGet(url);
-//			try {
-//				HttpResponse response = httpClient.execute(httpGet);
-//				StatusLine statusLine = response.getStatusLine();
-//				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-//					HttpEntity entity = response.getEntity();
-//					ByteArrayOutputStream out = new ByteArrayOutputStream();
-//					entity.writeTo(out);
-//					out.close();
-//					String responseStr = out.toString();
-//					// do something with response 
-//				} else {
-//					// handle bad response
-//				}
-//			} catch (ClientProtocolException e) {
-//				// handle exception
-//			} catch (IOException e) {
-//				// handle exception
-//			}
-//
-//			url = "http://www.umdsocialscheduler.com/schedule?term=201401&fbid=" + facebook_id;
-//			HttpGet getData = new HttpGet(url);
-//			try {
-//				HttpResponse response = httpClient.execute(getData);
-//				StatusLine statusLine = response.getStatusLine();
-//				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-//					HttpEntity entity = response.getEntity();
-//					ByteArrayOutputStream out = new ByteArrayOutputStream();
-//					entity.writeTo(out);
-//					out.close();
-//					String dataStr = out.toString();
-//
-//					// Parse JSON data
-//					output = new HashSet<String>();
-//					JSONObject mainObject = new JSONObject(dataStr);
-//					success = mainObject.getBoolean("success");
-//
-//					if(success) {
-//						JSONArray classArray = mainObject.getJSONArray("data");
-//
-//						for (int i = 0; i < classArray.length(); i++) {
-//							JSONObject row = classArray.getJSONObject(i);
-//							String className = row.getString("course_code");
-//
-//							if(classes.contains(className)) output.add(className);
-//						}
-//
-//						Iterator<String> iterator = output.iterator();
-//
-//						while(iterator.hasNext()) {
-//							String s = iterator.next();
-//
-//							classesText = classesText + s;
-//							if(iterator.hasNext()) classesText = classesText  + ", ";
-//						}
-//					}
-//				} else {
-//					// handle bad response
-//				}
-//			} catch (ClientProtocolException e) {
-//				// handle exception
-//			} catch (IOException e) {
-//				// handle exception
-//			} catch (JSONException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//
-//			return null;
-//		}
-//
-//		@Override
-//		protected void onPostExecute(Void result) {
-//			if(classesText != "") {
-//				p.num_classes.setText(classesText);
-//			}
-//		}
-//	}
-//
-//	static class SpecialParams {
-//		int position;
-//		TextView num_classes;
-//	}
+	private class RetrieveScheduleImg extends AsyncTask <SpecialParams,Void,Void>{
+		Dialog dialog;
+		long fb_id;
+		Bitmap img;
+		
+		@Override
+		protected void onPreExecute(){
+			//dialog.findViewById(R.id.dialog_progress).setVisibility(View.VISIBLE);
+		}
+
+		@Override
+		protected Void doInBackground(SpecialParams... p) {
+			dialog = p[0].dialog;
+			fb_id = p[0].fb_id;
+
+			HttpClient httpClient = new DefaultHttpClient();  
+			String url = "http://www.umdsocialscheduler.com/access?access_token=" + accessToken;
+			HttpGet httpGet = new HttpGet(url);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					String responseStr = out.toString();
+					// do something with response 
+				} else {
+					// handle bad response
+				}
+			} catch (ClientProtocolException e) {
+				// handle exception
+			} catch (IOException e) {
+				// handle exception
+			}
+
+			String imageUrl = "http://www.umdsocialscheduler.com/schedule_image?term=201401&fbid=" + fb_id;
+			httpGet = new HttpGet(imageUrl);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					// do something with response 
+
+					img = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length);
+				} else {
+					// handle bad response
+				}
+			} catch (ClientProtocolException e) {
+				// handle exception
+			} catch (IOException e) {
+				// handle exception
+			}
+
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			// Trigger the download of the URL asynchronously into the image view.
+
+
+			TouchImageView sched = (TouchImageView) dialog.findViewById(R.id.friend_img);
+
+			if(img != null) {
+				sched.setImageBitmap(img);
+				//Toast.makeText(context, "hallo", //Toast.LENGTH_SHORT).show();
+			}
+
+			dialog.findViewById(R.id.dialog_progress).setVisibility(View.GONE);
+		}
+	}
+
+	static class SpecialParams {
+		Dialog dialog;
+		long fb_id;
+	}
 
 	static class ViewHolder {
+		Button friend_schedule;
 		ImageView image;
 		TextView text;
 		TextView num_classes;

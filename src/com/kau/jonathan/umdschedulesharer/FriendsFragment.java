@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -20,18 +19,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
+import com.squareup.picasso.Picasso;
 
 public class FriendsFragment extends ListFragment {
 	private ProgressBar bar;
@@ -43,7 +46,6 @@ public class FriendsFragment extends ListFragment {
 
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		// do something with the data
 
 	}
 
@@ -176,10 +178,10 @@ public class FriendsFragment extends ListFragment {
 		@Override
 		protected void onPostExecute(Void result) {
 
-			Toast.makeText(getActivity(), url, Toast.LENGTH_SHORT).show();
-			Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
-			Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
-			Toast.makeText(getActivity(), ((ScheduleActivity) getActivity()).classes.keySet().toString(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), url, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), ((ScheduleActivity) getActivity()).classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 			bar.setVisibility(View.GONE);
 			frame.setVisibility(View.GONE);
 
