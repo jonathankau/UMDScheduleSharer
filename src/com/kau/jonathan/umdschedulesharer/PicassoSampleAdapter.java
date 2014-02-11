@@ -14,11 +14,15 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.view.Display;
@@ -34,7 +38,6 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
 import com.squareup.picasso.Picasso;
@@ -211,8 +214,11 @@ final class PicassoSampleAdapter extends BaseAdapter {
 					entity.writeTo(out);
 					out.close();
 					// do something with response 
+					
+					Options options = new BitmapFactory.Options();
+				    options.inScaled = false;
 
-					img = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length);
+					img = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length, options);
 				} else {
 					// handle bad response
 				}
@@ -236,15 +242,29 @@ final class PicassoSampleAdapter extends BaseAdapter {
 				
 				Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-				int DisplayWidth = (int) (display.getWidth() * .90);
-				float floatHeight = (((float) DisplayWidth / (float) img.getWidth()) * (float) img.getHeight());
-				int DisplayHeight = (int) floatHeight;
+				int displayWidth = (int) (display.getWidth() * .90);
+				float floatHeight = (((float) displayWidth / (float) img.getWidth()) * (float) img.getHeight());
+				int displayHeight = (int) floatHeight;
 				
-				sched.setImageBitmap(Bitmap.createScaledBitmap(img, DisplayWidth, DisplayHeight, false));
+				Bitmap scaledBitmap = Bitmap.createBitmap(displayWidth, displayHeight, Config.ARGB_8888);
+
+				float ratioX = displayWidth / (float) img.getWidth();
+				float ratioY = displayHeight / (float) img.getHeight();
+				float middleX = displayWidth / 2.0f;
+				float middleY = displayHeight / 2.0f;
+
+				Matrix scaleMatrix = new Matrix();
+				scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+				Canvas canvas = new Canvas(scaledBitmap);
+				canvas.setMatrix(scaleMatrix);
+				canvas.drawBitmap(img, middleX - img.getWidth() / 2, middleY - img.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+				
+				sched.setImageBitmap(scaledBitmap);
 
 				
 				Window window = dialog.getWindow();
-				window.setLayout(DisplayWidth, DisplayHeight);
+				window.setLayout(displayWidth, displayHeight);
 				window.setGravity(Gravity.CENTER);
 			}
 
