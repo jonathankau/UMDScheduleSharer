@@ -176,55 +176,8 @@ public class FriendsFragment extends ListFragment {
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
-				
+				}				
 			}
-			
-//			for (FriendDataHolder fdh: parsedData) {		
-//				Set<String> sharedClasses = new HashSet<String>();
-//
-//				url = "http://www.umdsocialscheduler.com/schedule?term=201401&fbid=" + fdh.getFacebookID();
-//				getData = new HttpGet(url);
-//				try {
-//					HttpResponse response = httpClient.execute(getData);
-//					StatusLine statusLine = response.getStatusLine();
-//					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-//						HttpEntity entity = response.getEntity();
-//						ByteArrayOutputStream out = new ByteArrayOutputStream();
-//						entity.writeTo(out);
-//						out.close();
-//						String dataStr = out.toString();
-//
-//						// Parse JSON data
-//						JSONObject mainObject = new JSONObject(dataStr);
-//						boolean success = mainObject.getBoolean("success");
-//
-//						if(success) {
-//							JSONArray classArray = mainObject.getJSONArray("data");
-//
-//							for (int i = 0; i < classArray.length(); i++) {
-//								JSONObject row = classArray.getJSONObject(i);
-//								String className = row.getString("course_code");
-//
-//								if(classes.contains(className)) sharedClasses.add(className);
-//							}
-//						}
-//					} else {
-//						// handle bad response
-//					}
-//				} catch (ClientProtocolException e) {
-//					// handle exception
-//				} catch (IOException e) {
-//					// handle exception
-//				} catch (JSONException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//
-//				// Set them for the fdh
-//				fdh.setClasses(sharedClasses);
-//			}
-
 			return null;
 		}
 
@@ -263,8 +216,6 @@ public class FriendsFragment extends ListFragment {
 			    fdh.setClasses(new HashSet<String>());
 			    output.put(fdh.getName(), fdh);
 			}
-			
-			//Collections.sort(output);
 		}
 
 		return output;

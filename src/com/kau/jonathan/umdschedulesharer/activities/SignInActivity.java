@@ -173,10 +173,6 @@ public class SignInActivity extends Activity {
 		spinner.setAdapter(adapter);
 
 
-//		// Find the user's profile picture custom view
-//		profilePictureView = (ProfilePictureView) findViewById(R.id.selection_profile_pic);
-//		profilePictureView.setCropped(true);
-
 		// Change typeface for all text
 		title = (TextView)findViewById(R.id.main_title);
 		username = (TextView)findViewById(R.id.selection_user_name);
@@ -229,9 +225,6 @@ public class SignInActivity extends Activity {
 
 				if (session == Session.getActiveSession()) {
 					if (user != null) {
-						// Set the id for the ProfilePictureView
-						// view that in turn displays the profile picture.
-						//profilePictureView.setProfileId(user.getId());
 						// Set the Textview's text to the user's name.
 						username.setText(user.getName());
 
@@ -522,7 +515,6 @@ public class SignInActivity extends Activity {
 		});
 
 		// Load the actual schedule page
-		//view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
 		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
 	}
 
@@ -577,7 +569,7 @@ public class SignInActivity extends Activity {
 					double height = 100;
 					//if (densityDPI > 1.5) {
 						zoom = 1.35;
-						height = 110;
+						//height = 110;
 					//}
 
 					final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
@@ -585,8 +577,9 @@ public class SignInActivity extends Activity {
 							"#table {display: table; 	height: 100%;	width: 100%;} " +
 							"#cell {	display: table-cell; 	vertical-align: middle;}</style></head>";
 					final String body = "<body><div id='table'><div id='cell'>";
-					final String footer = "<br><font size=+2><b>www.umdsocialscheduler.com</b></font></div></div></body></html>";
-
+					//final String footer = "<br><font size=+2><b>www.umdsocialscheduler.com</b></font></div></div></body></html>";
+					final String footer = "";
+					
 					//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
 					//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
 
