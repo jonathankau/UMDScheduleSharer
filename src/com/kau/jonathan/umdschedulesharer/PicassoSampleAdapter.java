@@ -129,7 +129,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 
 					Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-					int DisplayWidth = (int) (display.getWidth() * .95);
+					int DisplayWidth = (int) (display.getWidth());
 
 					// Set your dialog width and height dynamically as per your screen.
 
@@ -242,7 +242,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 				
 				Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-				int displayWidth = (int) (display.getWidth() * .90);
+				int displayWidth = (int) (display.getWidth());
 				float floatHeight = (((float) displayWidth / (float) img.getWidth()) * (float) img.getHeight());
 				int displayHeight = (int) floatHeight;
 				

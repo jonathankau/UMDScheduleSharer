@@ -35,8 +35,9 @@ public class ScheduleFragment extends Fragment {
 			// call something for API Level 11+
 			scheduleBrowser.getSettings().setDisplayZoomControls(false);
 		}
-		scheduleBrowser.loadData(((ScheduleActivity) getActivity()).schedule_src, "text/html", null);// 
+		scheduleBrowser.loadData(((ScheduleActivity) getActivity()).schedule_src, "text/html", "UTF-8");// 
 
+		
 		// Set facebook permissions
 		Button share = (Button)rootView.findViewById(R.id.fb_share);
 

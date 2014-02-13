@@ -5,7 +5,7 @@
     <color name="dark_red">#99171E</color>    
     <color name="light_red">#E76369</color>
     <color name="transparent">#00000000</color>
-    <color name="bluish_grey">#F5F8FA</color>
-    <color name="grey">#EEEEEE</color>
+    <color name="bluish_grey">#E9F2F5</color>
+    <color name="grey">#DFDFDE</color>
 
 </resources>

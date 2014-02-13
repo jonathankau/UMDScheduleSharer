@@ -155,8 +155,8 @@ public class ClassesFragment extends ListFragment {
 
 		protected void onPostExecute(Void v) {	  
 
-			Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
-			Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
 			
 			bar.setVisibility(View.GONE);
 			frame.setVisibility(View.GONE);

@@ -475,32 +475,6 @@ public class SignInActivity extends Activity {
 								//Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
 
 								if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-									//									// Sets the webview client for loading and accessing the HTML source of the schedule
-									//									view.setWebViewClient(new WebViewClient() {
-									//										int count = 0;
-									//										@Override  
-									//										public boolean shouldOverrideUrlLoading(WebView view, String url)  
-									//										{  
-									//											return false; 
-									//										}  
-									//
-									//										@Override
-									//										public void onPageFinished(WebView view, String url) {
-									//											if(count == 0) {
-									//												//Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
-									//												count++;
-									//
-									//
-									//												// Load the actual schedule page
-									//												view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-									//											}
-									//
-									//											//Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
-									//										}
-									//									});
-									//
-									//									view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
-
 									// Load the actual schedule page
 									view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
 
@@ -513,19 +487,11 @@ public class SignInActivity extends Activity {
 					String umd_username = ((EditText) findViewById(R.id.umd_username)).getText().toString();
 					String umd_password = ((EditText) findViewById(R.id.umd_password)).getText().toString();
 
-					//					view.loadUrl("javascript:(function() { " +  
-					//							"document.LoginPortletForm.in_tx_username.value='" + umd_username + "'; " +  
-					//							"document.LoginPortletForm.in_pw_userpass.value='" + umd_password + "'; " +
-					//							"document.LoginPortletForm.submit(); " +
-					//							"})()");
-
 					view.loadUrl("javascript:(function() { " +  
 							"document.lform.in_tx_username.value='" + umd_username + "'; " +  
 							"document.lform.in_pw_userpass.value='" + umd_password + "'; " +
 							"doLogin(); " +
 							"})()");
-
-					// JUST CALL doLogin() function!!!
 				}
 
 				//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
@@ -540,32 +506,6 @@ public class SignInActivity extends Activity {
 						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
 						umdLoginDialog.dismiss();
 					} else { // Correct login
-						// Sets the webview client for loading and accessing the HTML source of the schedule
-						//						view.setWebViewClient(new WebViewClient() {
-						//							int count = 0;
-						//							@Override  
-						//							public boolean shouldOverrideUrlLoading(WebView view, String url)  
-						//							{  
-						//								return false; 
-						//							}  
-						//
-						//							@Override
-						//							public void onPageFinished(WebView view, String url) {
-						//								if(count == 0) {
-						//									//Toast.makeText(SignInActivity.this, "Loaded schedule page!", Toast.LENGTH_SHORT).show();
-						//									count++;
-						//
-						//
-						//									// Load the actual schedule page
-						//									view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-						//								}
-						//
-						//								//Toast.makeText(SignInActivity.this, "Herro!", Toast.LENGTH_SHORT).show();
-						//							}
-						//						});
-						//
-						//						view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
-
 
 						// Load the actual schedule page
 						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
@@ -629,10 +569,10 @@ public class SignInActivity extends Activity {
 					float densityDPI = getResources().getDisplayMetrics().density; 
 					double zoom = 1;
 					double height = 100;
-					if (densityDPI > 1.5) {
+					//if (densityDPI > 1.5) {
 						zoom = 1.35;
 						height = 110;
-					}
+					//}
 
 					final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
 							"<head><style type='text/css'>html, body {	zoom:" + zoom + "; height: 100%;	padding: 0;	margin: 0;} " +

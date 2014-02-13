@@ -25,9 +25,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:paddingBottom="25dp"
+        android:paddingBottom="15dp"
         android:text="@string/main_title"
-        android:textSize="28sp"
+        android:textSize="29sp"
         android:visibility="visible" />
 
     <FrameLayout
@@ -71,7 +71,7 @@
         android:id="@+id/semester_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="15dp"
         android:background="@drawable/apptheme_spinner_background_holo_dark"
         android:visibility="visible" />
 
@@ -123,7 +123,7 @@
         android:paddingTop="15dp"
 		android:paddingBottom="15dp"
         android:visibility="visible"
-        facebook:login_text="Login         "
+        facebook:login_text="Connect         "
         facebook:logout_text="Logout        " />
 
 </LinearLayout>
