@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.activities;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Picture;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.PictureDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -55,6 +56,15 @@ import com.facebook.SessionLoginBehavior;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.widget.FacebookDialog;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.color;
+import com.kau.jonathan.umdschedulesharer.R.drawable;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.R.menu;
+import com.kau.jonathan.umdschedulesharer.fragments.ClassesFragment;
+import com.kau.jonathan.umdschedulesharer.fragments.FriendsFragment;
+import com.kau.jonathan.umdschedulesharer.fragments.ScheduleFragment;
 
 public class ScheduleActivity extends ActionBarActivity {
 	String fbPhotoAddress = null;
@@ -63,13 +73,13 @@ public class ScheduleActivity extends ActionBarActivity {
 	ViewPager mViewPager;
 	PagerAdapter mPageAdapter;
 	final String[] tabNames = {"Schedule","Classes","Friends"};
-	Bitmap schedule;
-	String schedule_src;
-	String schedule_data;
+	public Bitmap schedule;
+	public String schedule_src;
+	public String schedule_data;
 	private ProgressDialog progressDialog;
-	String accessToken = "";
+	public String accessToken = "";
 
-	HashMap<String, String> classes = new LinkedHashMap<String, String>();
+	public HashMap<String, String> classes = new LinkedHashMap<String, String>();
 
 	// FB upload graph object
 	private static final String TAG = "ScheduleActivity";
@@ -339,17 +349,17 @@ public class ScheduleActivity extends ActionBarActivity {
 
 		// Instantiate taps
 		final ActionBar actionBar = getSupportActionBar();
-
 		actionBar.setHomeButtonEnabled(false);
 
 
 		actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
 		View homeIcon = findViewById(android.R.id.home);
 		if(homeIcon != null) {
-			((View) homeIcon.getParent()).setClickable(false);
+			((View) homeIcon.getParent()).setVisibility(View.GONE);
 		}
 
 		actionBar.setCustomView(R.layout.actionbar);
+		actionBar.setLogo(new ColorDrawable(Color.TRANSPARENT));
 
 		// Specify that tabs should be displayed in the action bar.
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);

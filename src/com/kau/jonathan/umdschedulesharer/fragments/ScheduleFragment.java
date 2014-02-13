@@ -1,4 +1,9 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.fragments;
+
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;

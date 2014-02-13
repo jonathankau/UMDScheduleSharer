@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.views;
 
 import android.content.Context;
 import android.util.AttributeSet;

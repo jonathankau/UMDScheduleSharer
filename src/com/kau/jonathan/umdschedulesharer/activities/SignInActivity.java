@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.activities;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -57,6 +57,12 @@ import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 import com.facebook.widget.ProfilePictureView;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.array;
+import com.kau.jonathan.umdschedulesharer.R.drawable;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.R.menu;
 
 public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;

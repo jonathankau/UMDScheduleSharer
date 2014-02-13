@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.adapters;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,10 +39,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.drawable;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
+import com.kau.jonathan.umdschedulesharer.views.TouchImageView;
 import com.squareup.picasso.Picasso;
 
-final class PicassoSampleAdapter extends BaseAdapter {
+public class PicassoSampleAdapter extends BaseAdapter {
 	private final LayoutInflater inflater;
 	LinkedList<FriendDataHolder> data;
 	Context context;

@@ -18,18 +18,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <activity
-            android:name="com.kau.jonathan.umdschedulesharer.LoginActivity"
-            android:configChanges="orientation|keyboardHidden"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait" >
-        </activity>
-        <activity
-            android:name="com.kau.jonathan.umdschedulesharer.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.NoTitleBar" >
-        </activity>
-        <activity
-            android:name="com.kau.jonathan.umdschedulesharer.SignInActivity"
+            android:name="com.kau.jonathan.umdschedulesharer.activities.SignInActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" >            
@@ -44,7 +33,7 @@
             android:theme="@style/Custom_Dialog_Style" >
         </activity>
         <activity
-            android:name="com.kau.jonathan.umdschedulesharer.ScheduleActivity"
+            android:name="com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity"
             android:icon="@drawable/ic_icon"
             android:label="@string/title_activity_schedule"
             android:parentActivityName="FragmentActivity"

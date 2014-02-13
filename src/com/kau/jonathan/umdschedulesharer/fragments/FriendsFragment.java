@@ -1,14 +1,12 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.fragments;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.http.HttpEntity;
@@ -32,7 +30,12 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
-import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
+import com.kau.jonathan.umdschedulesharer.adapters.PicassoSampleAdapter;
+import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 
 public class FriendsFragment extends ListFragment {
 	private ProgressBar bar;

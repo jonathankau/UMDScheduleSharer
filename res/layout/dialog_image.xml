@@ -22,7 +22,7 @@
         </ProgressBar>
     </FrameLayout>
 
-    <com.kau.jonathan.umdschedulesharer.TouchImageView
+    <com.kau.jonathan.umdschedulesharer.views.TouchImageView
         android:id="@+id/friend_img"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

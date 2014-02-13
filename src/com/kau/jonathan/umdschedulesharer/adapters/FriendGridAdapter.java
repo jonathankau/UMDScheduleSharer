@@ -1,12 +1,16 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.adapters;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
 
-import com.kau.jonathan.umdschedulesharer.Models.ClassDataHolder.FriendSectionData;
-import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
-import com.kau.jonathan.umdschedulesharer.PicassoSampleAdapter.ViewHolder;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.drawable;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.adapters.PicassoSampleAdapter.ViewHolder;
+import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
+import com.kau.jonathan.umdschedulesharer.models.ClassDataHolder.FriendSectionData;
 import com.squareup.picasso.Picasso;
 
 import android.content.Context;

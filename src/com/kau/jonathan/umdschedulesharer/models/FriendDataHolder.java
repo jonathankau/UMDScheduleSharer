@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer.Models;
+package com.kau.jonathan.umdschedulesharer.models;
 
 import java.util.Iterator;
 import java.util.Set;

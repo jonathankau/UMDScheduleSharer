@@ -1,4 +1,4 @@
-package com.kau.jonathan.umdschedulesharer;
+package com.kau.jonathan.umdschedulesharer.fragments;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,8 +29,13 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.kau.jonathan.umdschedulesharer.Models.ClassDataHolder;
-import com.kau.jonathan.umdschedulesharer.Models.ClassDataHolder.FriendSectionData;
+import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.R.id;
+import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
+import com.kau.jonathan.umdschedulesharer.adapters.ClassesAdapter;
+import com.kau.jonathan.umdschedulesharer.models.ClassDataHolder;
+import com.kau.jonathan.umdschedulesharer.models.ClassDataHolder.FriendSectionData;
 
 public class ClassesFragment extends ListFragment {
 	private ProgressBar bar;
