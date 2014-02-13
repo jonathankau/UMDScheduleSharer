@@ -3,6 +3,8 @@ package com.kau.jonathan.umdschedulesharer;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -10,6 +12,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -23,6 +29,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -48,6 +55,7 @@ import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphUser;
+import com.facebook.widget.LoginButton;
 import com.facebook.widget.ProfilePictureView;
 
 public class SignInActivity extends Activity {
@@ -61,6 +69,7 @@ public class SignInActivity extends Activity {
 	String fb_id;
 	EditText umd_username;
 	EditText umd_password;
+	Bitmap defaultFacebookPic;
 
 	private UiLifecycleHelper uiHelper;
 	private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -74,6 +83,24 @@ public class SignInActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sign_in);
+		
+
+		// Facebook Session
+		uiHelper = new UiLifecycleHelper(this, callback);
+		uiHelper.onCreate(savedInstanceState);
+		
+		try {
+			PackageInfo info = getPackageManager().getPackageInfo("com.kau.jonathan.umdschedulesharer", PackageManager.GET_SIGNATURES);
+			for (Signature signature : info.signatures) {
+			    MessageDigest md = MessageDigest.getInstance("SHA");
+			    md.update(signature.toByteArray());
+			    Log.e("MY KEY HASH:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+			}
+			} catch (NameNotFoundException e) {
+
+			} catch (NoSuchAlgorithmException e) {
+
+			}
 
 		// Check to see if user has gotten schedule already
 		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
@@ -84,7 +111,8 @@ public class SignInActivity extends Activity {
 			Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
 			// Attach source code
-			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));		
+			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));	
+			intent.putExtra("SCHEDULE_DATA", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_data", ""));
 
 
 			// Start activity
@@ -92,9 +120,9 @@ public class SignInActivity extends Activity {
 		}
 
 		// Set default prof pic
-		Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
+		defaultFacebookPic = BitmapFactory.decodeResource(getResources(),
 				R.drawable.fb_default);
-		((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(makeCircular(bitmap));
+		((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(makeCircular(defaultFacebookPic));
 
 
 		// Generate typefaces		
@@ -102,6 +130,10 @@ public class SignInActivity extends Activity {
 				"fonts/Lato-Reg.ttf");
 		final Typeface boldface=Typeface.createFromAsset(this.getAssets(),
 				"fonts/Lato-Bol.ttf");
+		
+		// Facebook Login Button
+		LoginButton login = (LoginButton)findViewById(R.id.fb_login);
+		login.setTypeface(face);
 
 
 		// Populate Spinner choices
@@ -134,13 +166,10 @@ public class SignInActivity extends Activity {
 		// Apply the adapter to the spinner
 		spinner.setAdapter(adapter);
 
-		// Facebook Session
-		uiHelper = new UiLifecycleHelper(this, callback);
-		uiHelper.onCreate(savedInstanceState);
 
-		// Find the user's profile picture custom view
-		profilePictureView = (ProfilePictureView) findViewById(R.id.selection_profile_pic);
-		profilePictureView.setCropped(true);
+//		// Find the user's profile picture custom view
+//		profilePictureView = (ProfilePictureView) findViewById(R.id.selection_profile_pic);
+//		profilePictureView.setCropped(true);
 
 		// Change typeface for all text
 		title = (TextView)findViewById(R.id.main_title);
@@ -181,7 +210,8 @@ public class SignInActivity extends Activity {
 			@Override
 			public void onCompleted(GraphUser user, Response response) {
 				// If the response is successful
-				loggingIn.dismiss();
+				if(loggingIn != null) loggingIn.dismiss();
+				
 
 				// Show views
 				//profilePictureView.setVisibility(View.VISIBLE);
@@ -195,7 +225,7 @@ public class SignInActivity extends Activity {
 					if (user != null) {
 						// Set the id for the ProfilePictureView
 						// view that in turn displays the profile picture.
-						profilePictureView.setProfileId(user.getId());
+						//profilePictureView.setProfileId(user.getId());
 						// Set the Textview's text to the user's name.
 						username.setText(user.getName());
 
@@ -219,9 +249,7 @@ public class SignInActivity extends Activity {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == REAUTH_ACTIVITY_CODE) {
-			uiHelper.onActivityResult(requestCode, resultCode, data);
-		}
+		uiHelper.onActivityResult(requestCode, resultCode, data);
 	}
 
 	@Override
@@ -232,16 +260,33 @@ public class SignInActivity extends Activity {
 	// FB State Managers
 
 	private void onSessionStateChange(final Session session, SessionState state, Exception exception) {
-		if (session != null && session.isOpened()) {
+		if (session.isOpened()) {
 			// Get the user's data.
 			makeMeRequest(session);
+		} else if (session.isClosed()) {
+			// Reset views
+			defaultFacebookPic = BitmapFactory.decodeResource(getResources(),
+					R.drawable.fb_default);
+			((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(makeCircular(defaultFacebookPic));
+			username.setVisibility(View.GONE);
 		}
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		uiHelper.onResume();	
+		// For scenarios where the main activity is launched and user
+		// session is not null, the session state change notification
+		// may not be triggered. Trigger it if it's open/closed.
+		Session session = Session.getActiveSession();
+
+		if (session != null &&
+				(session.isOpened() || session.isClosed()) ) {
+			onSessionStateChange(session, session.getState(), null);
+		} else {
+		}
+
+		uiHelper.onResume();
 
 	}
 

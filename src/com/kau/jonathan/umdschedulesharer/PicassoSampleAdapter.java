@@ -92,8 +92,8 @@ final class PicassoSampleAdapter extends BaseAdapter {
 			holder.image = (ImageView) view.findViewById(R.id.friend_pic);
 			holder.text = (TextView) view.findViewById(R.id.friend_name);
 			holder.num_classes = (TextView) view.findViewById(R.id.shared_classes);			
-			holder.text.setTypeface(face);
-			holder.num_classes.setTypeface(lightface);
+			holder.text.setTypeface(lightface);
+			holder.num_classes.setTypeface(face);
 			view.setTag(holder);
 		} else {
 			holder = (ViewHolder) view.getTag();
@@ -129,7 +129,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
 
 					Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-					int DisplayWidth = (int) (display.getWidth() * .90);
+					int DisplayWidth = (int) (display.getWidth() * .95);
 
 					// Set your dialog width and height dynamically as per your screen.
 

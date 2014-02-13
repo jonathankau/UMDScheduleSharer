@@ -1,28 +1,17 @@
 package com.kau.jonathan.umdschedulesharer;
 
-import java.util.Arrays;
-
-import com.facebook.widget.LoginButton;
-
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.webkit.WebSettings.ZoomDensity;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class ScheduleFragment extends Fragment {
 	Bitmap schedule;

@@ -2,9 +2,13 @@ package com.kau.jonathan.umdschedulesharer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.http.HttpEntity;
@@ -19,22 +23,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.Models.FriendDataHolder;
-import com.squareup.picasso.Picasso;
 
 public class FriendsFragment extends ListFragment {
 	private ProgressBar bar;
@@ -63,7 +61,7 @@ public class FriendsFragment extends ListFragment {
 		String url;
 		String responseStr;
 		String dataStr;
-		LinkedList<FriendDataHolder> parsedData = new LinkedList<FriendDataHolder>();
+		HashMap<String, FriendDataHolder> parsedData = new HashMap<String, FriendDataHolder>();
 
 		@Override
 		protected void onPreExecute(){
@@ -90,6 +88,8 @@ public class FriendsFragment extends ListFragment {
 				} else {
 					// handle bad response
 				}
+
+				response.getEntity().consumeContent();
 			} catch (ClientProtocolException e) {
 				// handle exception
 			} catch (IOException e) {
@@ -113,6 +113,8 @@ public class FriendsFragment extends ListFragment {
 				} else {
 					// handle bad response
 				}
+
+				response.getEntity().consumeContent();
 			} catch (ClientProtocolException e) {
 				// handle exception
 			} catch (IOException e) {
@@ -122,10 +124,9 @@ public class FriendsFragment extends ListFragment {
 				e.printStackTrace();
 			}
 			
-			for (FriendDataHolder fdh: parsedData) {		
-				Set<String> sharedClasses = new HashSet<String>();
-				
-				url = "http://www.umdsocialscheduler.com/schedule?term=201401&fbid=" + fdh.getFacebookID();
+			for(String s: classes) {
+
+				url = "http://www.umdsocialscheduler.com/friends?term=201401&course=" + s;
 				getData = new HttpGet(url);
 				try {
 					HttpResponse response = httpClient.execute(getData);
@@ -135,25 +136,36 @@ public class FriendsFragment extends ListFragment {
 						ByteArrayOutputStream out = new ByteArrayOutputStream();
 						entity.writeTo(out);
 						out.close();
-						String dataStr = out.toString();
-
-						// Parse JSON data
+						dataStr = out.toString();
+						// Parse response
+						
 						JSONObject mainObject = new JSONObject(dataStr);
+						
 						boolean success = mainObject.getBoolean("success");
 
 						if(success) {
 							JSONArray classArray = mainObject.getJSONArray("data");
+							
 
 							for (int i = 0; i < classArray.length(); i++) {
 								JSONObject row = classArray.getJSONObject(i);
-								String className = row.getString("course_code");
-
-								if(classes.contains(className)) sharedClasses.add(className);
+								
+								String name = row.getString("name");
+								String fbid = row.getString("fbid");
+								
+								FriendDataHolder fdh = parsedData.get(name);
+								Set<String> personClasses = fdh.getClasses();
+								personClasses.add(s);
+								fdh.setClasses(personClasses);
+								parsedData.put(name, fdh);
 							}
+							
 						}
 					} else {
 						// handle bad response
 					}
+
+					response.getEntity().consumeContent();
 				} catch (ClientProtocolException e) {
 					// handle exception
 				} catch (IOException e) {
@@ -163,9 +175,52 @@ public class FriendsFragment extends ListFragment {
 					e.printStackTrace();
 				}
 				
-				// Set them for the fdh
-				fdh.setClasses(sharedClasses);
 			}
+			
+//			for (FriendDataHolder fdh: parsedData) {		
+//				Set<String> sharedClasses = new HashSet<String>();
+//
+//				url = "http://www.umdsocialscheduler.com/schedule?term=201401&fbid=" + fdh.getFacebookID();
+//				getData = new HttpGet(url);
+//				try {
+//					HttpResponse response = httpClient.execute(getData);
+//					StatusLine statusLine = response.getStatusLine();
+//					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+//						HttpEntity entity = response.getEntity();
+//						ByteArrayOutputStream out = new ByteArrayOutputStream();
+//						entity.writeTo(out);
+//						out.close();
+//						String dataStr = out.toString();
+//
+//						// Parse JSON data
+//						JSONObject mainObject = new JSONObject(dataStr);
+//						boolean success = mainObject.getBoolean("success");
+//
+//						if(success) {
+//							JSONArray classArray = mainObject.getJSONArray("data");
+//
+//							for (int i = 0; i < classArray.length(); i++) {
+//								JSONObject row = classArray.getJSONObject(i);
+//								String className = row.getString("course_code");
+//
+//								if(classes.contains(className)) sharedClasses.add(className);
+//							}
+//						}
+//					} else {
+//						// handle bad response
+//					}
+//				} catch (ClientProtocolException e) {
+//					// handle exception
+//				} catch (IOException e) {
+//					// handle exception
+//				} catch (JSONException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//
+//				// Set them for the fdh
+//				fdh.setClasses(sharedClasses);
+//			}
 
 			return null;
 		}
@@ -179,15 +234,20 @@ public class FriendsFragment extends ListFragment {
 			//Toast.makeText(getActivity(), ((ScheduleActivity) getActivity()).classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 			bar.setVisibility(View.GONE);
 			frame.setVisibility(View.GONE);
+			
+			LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
+			data.addAll(parsedData.values());
+			Collections.sort(data);
+			
 
-			PicassoSampleAdapter adapter = new PicassoSampleAdapter(FriendsFragment.this.getActivity(), parsedData, 
+			PicassoSampleAdapter adapter = new PicassoSampleAdapter(FriendsFragment.this.getActivity(), data, 
 					((ScheduleActivity) getActivity()).classes.keySet(), ((ScheduleActivity) getActivity()).accessToken);
 			setListAdapter(adapter);
 		}
 	}
 
-	public LinkedList<FriendDataHolder> parseString(String data) throws JSONException {
-		LinkedList<FriendDataHolder> output = new LinkedList<FriendDataHolder>();
+	public HashMap<String, FriendDataHolder> parseString(String data) throws JSONException {
+		HashMap<String, FriendDataHolder> output = new LinkedHashMap<String, FriendDataHolder>();
 		JSONObject mainObject = new JSONObject(data);
 		boolean success = mainObject.getBoolean("success");
 
@@ -196,10 +256,12 @@ public class FriendsFragment extends ListFragment {
 			
 			for (int i = 0; i < friendArray.length(); i++) {
 			    JSONObject row = friendArray.getJSONObject(i);
-			    output.add(new FriendDataHolder(row.getString("name"), row.getLong("fbid"), row.getBoolean("share")));
+			    FriendDataHolder fdh = new FriendDataHolder(row.getString("name"), row.getLong("fbid"), row.getBoolean("share"));
+			    fdh.setClasses(new HashSet<String>());
+			    output.put(fdh.getName(), fdh);
 			}
 			
-			Collections.sort(output);
+			//Collections.sort(output);
 		}
 
 		return output;

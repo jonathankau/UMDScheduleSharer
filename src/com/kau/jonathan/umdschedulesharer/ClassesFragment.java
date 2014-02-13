@@ -49,7 +49,7 @@ public class ClassesFragment extends ListFragment {
 		
 		classes = ((ScheduleActivity)getActivity()).classes;
 
-		Toast.makeText(getActivity(), classes.toString(), Toast.LENGTH_SHORT).show();
+		//Toast.makeText(getActivity(), classes.toString(), Toast.LENGTH_SHORT).show();
 		new RetrieveDataTask().execute();
 
 		return rootView;
@@ -86,6 +86,8 @@ public class ClassesFragment extends ListFragment {
 				} else {
 					// handle bad response
 				}
+				
+				response.getEntity().consumeContent();
 			} catch (ClientProtocolException e) {
 				// handle exception
 			} catch (IOException e) {
@@ -135,6 +137,8 @@ public class ClassesFragment extends ListFragment {
 					} else {
 						// handle bad response
 					}
+
+					response.getEntity().consumeContent();
 				} catch (ClientProtocolException e) {
 					// handle exception
 				} catch (IOException e) {
@@ -150,6 +154,8 @@ public class ClassesFragment extends ListFragment {
 		}
 
 		protected void onPostExecute(Void v) {	  
+
+			Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
 			Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
 			
 			bar.setVisibility(View.GONE);

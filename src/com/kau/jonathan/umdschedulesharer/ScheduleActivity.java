@@ -300,7 +300,7 @@ public class ScheduleActivity extends ActionBarActivity {
 		
 		if(schedule_data != null) {
 			classes = parseScheduleData(schedule_data);
-			Toast.makeText(ScheduleActivity.this, classes.keySet().toString(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(ScheduleActivity.this, classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 		}
 
 		// Setup Facebook lifecycle handler
@@ -555,7 +555,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			//
 			return true;
 		case 1: // Update schedule
-			Intent back = new Intent(this, MainActivity.class);
+			Intent back = new Intent(this, SignInActivity.class);
 
 			// Save data for later use
 			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
@@ -623,12 +623,14 @@ public class ScheduleActivity extends ActionBarActivity {
 	public HashMap<String, String> parseScheduleData(String incoming) {
 		HashMap<String, String> output = new LinkedHashMap<String, String>();
 
-		String REGEX = "C(\\S*)\\s(\\S*)A";
+		String REGEX = "C(\\S*)(\\s|H)(0\\S*)A";
 		Pattern p = Pattern.compile(REGEX);
 		Matcher m = p.matcher(incoming);
 
 		while(m.find()) {
-			output.put(m.group(1), m.group(2));
+			String className = m.group(1);
+			if(m.group(2) == "H") className = className + "H";
+			output.put(className, m.group(3));
 			//Toast.makeText(ScheduleActivity.this, m.group(1) + " " + m.group(2), Toast.LENGTH_SHORT).show();
 		}
 

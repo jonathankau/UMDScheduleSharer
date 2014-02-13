@@ -37,6 +37,11 @@ public class FriendGridAdapter extends BaseAdapter {
 		lightface=Typeface.createFromAsset(context.getAssets(),
 				"fonts/Lato-Lig.ttf");
 	}
+	
+	@Override
+	public boolean isEnabled(int position) {
+		return false; // false to disable click
+	}
 
 	@Override
 	public int getCount() {
@@ -79,7 +84,7 @@ public class FriendGridAdapter extends BaseAdapter {
 
 		// Build textviews
 		holder.name.setText(fsd.getName());
-		holder.section.setText("Sec. " + fsd.getSection());
+		holder.section.setText(fsd.getSection());//"Sec. " + 
 
 		// Set image
 		// Trigger the download of the URL asynchronously into the image view.

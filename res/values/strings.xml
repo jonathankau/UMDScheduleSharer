@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">UMD Social Scheduler</string>
+    <string name="app_name">Social Scheduler</string>
 
     <string-array name="semester_selection">
         <item>Fall 2013</item>

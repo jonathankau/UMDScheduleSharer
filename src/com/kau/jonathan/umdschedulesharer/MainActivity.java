@@ -1,5 +1,7 @@
 package com.kau.jonathan.umdschedulesharer;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import android.app.Activity;
@@ -7,21 +9,21 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.facebook.Request;
-import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
-import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 
 public class MainActivity extends Activity {
@@ -112,17 +114,17 @@ public class MainActivity extends Activity {
 	// Sign In Method when the user presses the button
 	public void signIntoFacebook(View v) {
 
-//		Session session = Session.getActiveSession();
-//		if (!session.isOpened() && !session.isClosed()) {
-//			session.openForRead(new Session.OpenRequest(this)
-//			.setPermissions(Arrays.asList("basic_info"))
-//			.setCallback(callback));
-//		} else {
-//			Session.openActiveSession(this, true, callback);
-//		}
-//		
-//
-//		onSessionStateChange(session, session.getState(), null);
+		Session session = Session.getActiveSession();
+		if (!session.isOpened() && !session.isClosed()) {
+			session.openForRead(new Session.OpenRequest(this)
+			.setPermissions(Arrays.asList("basic_info"))
+			.setCallback(callback));
+		} else {
+			Session.openActiveSession(this, true, callback);
+		}
+		
+
+		onSessionStateChange(session, session.getState(), null);
 	}
 
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {

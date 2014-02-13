@@ -70,7 +70,7 @@ public class ClassesAdapter extends BaseAdapter {
 		ClassDataHolder cdh = getItem(position);
 		
 		holder.class_name.setText(cdh.getName());
-		holder.section_name.setText("Sec. " + cdh.getSection());
+		holder.section_name.setText(cdh.getSection());//"Sec. " + 
 		
 		
 		// Set NonScrollableGridView Adapter
