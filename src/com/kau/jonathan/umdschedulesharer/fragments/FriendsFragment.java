@@ -21,25 +21,34 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.kau.jonathan.umdschedulesharer.R;
-import com.kau.jonathan.umdschedulesharer.R.id;
-import com.kau.jonathan.umdschedulesharer.R.layout;
 import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
-import com.kau.jonathan.umdschedulesharer.adapters.PicassoSampleAdapter;
+import com.kau.jonathan.umdschedulesharer.adapters.FriendListAdapter;
+import com.kau.jonathan.umdschedulesharer.fragments.ClassesFragment.RetrieveDataTask;
 import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 
 public class FriendsFragment extends ListFragment {
 	private ProgressBar bar;
 	private FrameLayout frame;
+	private LinearLayout friends_frag;
+	private TextView no_internet;
+	private TextView tap_to_retry;
 	Set<String> classes;
 
 	public FriendsFragment(){
@@ -52,18 +61,60 @@ public class FriendsFragment extends ListFragment {
 
 		bar = (ProgressBar) rootView.findViewById(R.id.friends_progress_bar);
 		frame = (FrameLayout) rootView.findViewById(R.id.progress_frame);
-		
+		friends_frag = (LinearLayout) rootView.findViewById(R.id.friends_frag);
+		no_internet = (TextView) rootView.findViewById(R.id.no_internet);
+		tap_to_retry = (TextView) rootView.findViewById(R.id.tap_to_retry);
+
 		classes = ((ScheduleActivity) getActivity()).classes.keySet();
 
-		new RetrieveFriendsTask().execute();
+		// Generate typefaces
+		final Typeface face=Typeface.createFromAsset(getActivity().getAssets(),
+				"fonts/Lato-Reg.ttf");
+		final Typeface boldface=Typeface.createFromAsset(getActivity().getAssets(),
+				"fonts/Lato-Bol.ttf");
+
+		no_internet.setTypeface(face);
+		tap_to_retry.setTypeface(face);
 
 		return rootView;
+	}
+
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		if(isNetworkAvailable()) {
+			new RetrieveFriendsTask().execute();
+		} else {
+			no_internet.setVisibility(View.VISIBLE);
+			tap_to_retry.setVisibility(View.VISIBLE);
+			this.getListView().setVisibility(View.GONE);
+
+			friends_frag.setOnClickListener(new OnClickListener(){
+
+				@Override
+				public void onClick(View v) {
+					no_internet.setVisibility(View.GONE);
+					tap_to_retry.setVisibility(View.GONE);
+
+					new RetrieveFriendsTask().execute();
+				}
+
+			});
+		}
+	}
+
+	private boolean isNetworkAvailable() {
+		ConnectivityManager connectivityManager 
+		= (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
 	private class RetrieveFriendsTask extends AsyncTask <Void,Void,Void>{
 		String url;
 		String responseStr;
 		String dataStr;
+		boolean success = false;
 		HashMap<String, FriendDataHolder> parsedData = new HashMap<String, FriendDataHolder>();
 
 		@Override
@@ -88,6 +139,7 @@ public class FriendsFragment extends ListFragment {
 					out.close();
 					responseStr = out.toString();
 					// do something with response 
+					success = true;
 				} else {
 					// handle bad response
 				}
@@ -126,7 +178,7 @@ public class FriendsFragment extends ListFragment {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			for(String s: classes) {
 
 				url = "http://www.umdsocialscheduler.com/friends?term=201401&course=" + s;
@@ -141,28 +193,28 @@ public class FriendsFragment extends ListFragment {
 						out.close();
 						dataStr = out.toString();
 						// Parse response
-						
+
 						JSONObject mainObject = new JSONObject(dataStr);
-						
+
 						boolean success = mainObject.getBoolean("success");
 
 						if(success) {
 							JSONArray classArray = mainObject.getJSONArray("data");
-							
+
 
 							for (int i = 0; i < classArray.length(); i++) {
 								JSONObject row = classArray.getJSONObject(i);
-								
+
 								String name = row.getString("name");
 								String fbid = row.getString("fbid");
-								
+
 								FriendDataHolder fdh = parsedData.get(name);
 								Set<String> personClasses = fdh.getClasses();
 								personClasses.add(s);
 								fdh.setClasses(personClasses);
 								parsedData.put(name, fdh);
 							}
-							
+
 						}
 					} else {
 						// handle bad response
@@ -183,22 +235,40 @@ public class FriendsFragment extends ListFragment {
 
 		@Override
 		protected void onPostExecute(Void result) {
-
-			//Toast.makeText(getActivity(), url, Toast.LENGTH_SHORT).show();
-			//Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
-			//Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
-			//Toast.makeText(getActivity(), ((ScheduleActivity) getActivity()).classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 			bar.setVisibility(View.GONE);
 			frame.setVisibility(View.GONE);
-			
-			LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
-			data.addAll(parsedData.values());
-			Collections.sort(data);
-			
 
-			PicassoSampleAdapter adapter = new PicassoSampleAdapter(FriendsFragment.this.getActivity(), data, 
-					((ScheduleActivity) getActivity()).classes.keySet(), ((ScheduleActivity) getActivity()).accessToken);
-			setListAdapter(adapter);
+			if(success) {
+				LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
+				data.addAll(parsedData.values());
+				Collections.sort(data);
+
+				FriendListAdapter adapter = new FriendListAdapter(FriendsFragment.this.getActivity(), data, 
+						((ScheduleActivity) getActivity()).classes.keySet(), ((ScheduleActivity) getActivity()).accessToken);
+				setListAdapter(adapter);
+				
+				FriendsFragment.this.getListView().setVisibility(View.VISIBLE);
+				no_internet.setVisibility(View.GONE);
+				tap_to_retry.setVisibility(View.GONE);
+				
+				friends_frag.setOnClickListener(new OnClickListener(){
+
+					@Override
+					public void onClick(View v) {
+						no_internet.setVisibility(View.GONE);
+						tap_to_retry.setVisibility(View.GONE);
+
+						new RetrieveFriendsTask().execute();
+					}
+
+				});
+			} else {
+				FriendsFragment.this.getListView().setVisibility(View.GONE);
+				no_internet.setVisibility(View.VISIBLE);
+				tap_to_retry.setVisibility(View.VISIBLE);
+				
+				
+			}
 		}
 	}
 
@@ -209,12 +279,12 @@ public class FriendsFragment extends ListFragment {
 
 		if(success) {
 			JSONArray friendArray = mainObject.getJSONArray("data");
-			
+
 			for (int i = 0; i < friendArray.length(); i++) {
-			    JSONObject row = friendArray.getJSONObject(i);
-			    FriendDataHolder fdh = new FriendDataHolder(row.getString("name"), row.getLong("fbid"), row.getBoolean("share"));
-			    fdh.setClasses(new HashSet<String>());
-			    output.put(fdh.getName(), fdh);
+				JSONObject row = friendArray.getJSONObject(i);
+				FriendDataHolder fdh = new FriendDataHolder(row.getString("name"), row.getLong("fbid"), row.getBoolean("share"));
+				fdh.setClasses(new HashSet<String>());
+				output.put(fdh.getName(), fdh);
 			}
 		}
 

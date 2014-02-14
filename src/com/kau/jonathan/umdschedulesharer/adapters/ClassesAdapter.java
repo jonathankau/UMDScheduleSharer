@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.kau.jonathan.umdschedulesharer.R;
@@ -62,10 +63,17 @@ public class ClassesAdapter extends BaseAdapter {
 		if (view == null) {
 			view = LayoutInflater.from(context).inflate(R.layout.class_list_item, parent, false);
 			holder = new ViewHolder();
+			
+			// Grab views
 			holder.class_name = (TextView) view.findViewById(R.id.class_name);
 			holder.section_name = (TextView) view.findViewById(R.id.section_name);
+			holder.no_friends_text = (TextView) view.findViewById(R.id.no_friends_text);
+			holder.sad_face = (ImageView) view.findViewById(R.id.sad_face);
+			
+			// Set fonts
 			holder.class_name.setTypeface(lightface);
 			holder.section_name.setTypeface(lightface);
+			holder.no_friends_text.setTypeface(face);
 			view.setTag(holder);
 		} else {
 			holder = (ViewHolder) view.getTag();
@@ -82,12 +90,23 @@ public class ClassesAdapter extends BaseAdapter {
 		FriendGridAdapter adapt = new FriendGridAdapter(context, cdh.getFriends());
 		grid.setAdapter(adapt);
 		
+		// Display icon if no Friends in this class
+		if(cdh.getFriends().isEmpty()) {
+			holder.no_friends_text.setVisibility(View.VISIBLE);
+			holder.sad_face.setVisibility(View.VISIBLE);
+		} else {
+			holder.no_friends_text.setVisibility(View.GONE);
+			holder.sad_face.setVisibility(View.GONE);
+		}
+		
 		return view;
 	}
 
 	static class ViewHolder {
 		TextView class_name;
 		TextView section_name;
+		TextView no_friends_text;
+		ImageView sad_face;
 	}
 
 }

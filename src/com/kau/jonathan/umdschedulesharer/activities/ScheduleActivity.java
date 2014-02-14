@@ -25,6 +25,8 @@ import android.graphics.Picture;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.PictureDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -129,54 +131,64 @@ public class ScheduleActivity extends ActionBarActivity {
 		});
 	}
 
+	private boolean isNetworkAvailable() {
+		ConnectivityManager connectivityManager 
+		= (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+	}
+
 	public void shareToFacebook(View v) {
-		Session session = Session.getActiveSession();
+		if(isNetworkAvailable()) {
+			Session session = Session.getActiveSession();
 
-		if (session == null) {
-			session = new Session.Builder(this).setApplicationId("580519828708344").build();
+			if (session == null) {
+				session = new Session.Builder(this).setApplicationId("580519828708344").build();
 
-			Session.setActiveSession(session);
-			session.addCallback(new StatusCallback() {
-				public void call(Session session, SessionState state, Exception exception) {
-					if (state == SessionState.OPENED) {
-						Session.OpenRequest openRequest = new Session.OpenRequest(ScheduleActivity.this);
-						openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
-						session.openForRead(openRequest);
-						session.requestNewPublishPermissions(
-								new Session.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS));
-					}
-					else if (state == SessionState.OPENED_TOKEN_UPDATED) {
-					}
-					else if (state == SessionState.CLOSED_LOGIN_FAILED) {
-						session.closeAndClearTokenInformation();
-						// Possibly finish the activity
-					}
-					else if (state == SessionState.CLOSED) {
-						session.close();
-						// Possibly finish the activity
-					}
-				}});
+				Session.setActiveSession(session);
+				session.addCallback(new StatusCallback() {
+					public void call(Session session, SessionState state, Exception exception) {
+						if (state == SessionState.OPENED) {
+							Session.OpenRequest openRequest = new Session.OpenRequest(ScheduleActivity.this);
+							openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
+							session.openForRead(openRequest);
+							session.requestNewPublishPermissions(
+									new Session.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS));
+						}
+						else if (state == SessionState.OPENED_TOKEN_UPDATED) {
+						}
+						else if (state == SessionState.CLOSED_LOGIN_FAILED) {
+							session.closeAndClearTokenInformation();
+							// Possibly finish the activity
+						}
+						else if (state == SessionState.CLOSED) {
+							session.close();
+							// Possibly finish the activity
+						}
+					}});
 
+
+			} else {
+				List<String> permissions = session.getPermissions();
+				if (!isSubsetOf(PERMISSIONS, permissions)) {
+					pendingPublishReauthorization = true;
+					Session.NewPermissionsRequest newPermissionsRequest = new Session 
+							.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS);
+					session.requestNewPublishPermissions(newPermissionsRequest);
+				} else {
+					publishFacebook();
+				}
+			}
+
+			if (!session.isOpened()) {
+				Session.OpenRequest openRequest = new Session.OpenRequest(this);
+				openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
+				session.openForRead(openRequest);
+			}
 
 		} else {
-			List<String> permissions = session.getPermissions();
-			if (!isSubsetOf(PERMISSIONS, permissions)) {
-				pendingPublishReauthorization = true;
-				Session.NewPermissionsRequest newPermissionsRequest = new Session 
-						.NewPermissionsRequest(ScheduleActivity.this, PERMISSIONS);
-				session.requestNewPublishPermissions(newPermissionsRequest);
-			} else {
-				publishFacebook();
-			}
+			Toast.makeText(ScheduleActivity.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
 		}
-
-		if (!session.isOpened()) {
-			Session.OpenRequest openRequest = new Session.OpenRequest(this);
-			openRequest.setLoginBehavior(SessionLoginBehavior.SSO_WITH_FALLBACK);
-			session.openForRead(openRequest);
-		}
-
-
 
 	}
 
@@ -306,8 +318,8 @@ public class ScheduleActivity extends ActionBarActivity {
 		}
 
 		// Parse schedule data to figure out classes
-		
-		
+
+
 		if(schedule_data != null) {
 			classes = parseScheduleData(schedule_data);
 			//Toast.makeText(ScheduleActivity.this, classes.keySet().toString(), Toast.LENGTH_SHORT).show();

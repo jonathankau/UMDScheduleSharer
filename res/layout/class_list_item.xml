@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/bg_card_white"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:orientation="vertical" >
 
         <LinearLayout
@@ -55,6 +55,22 @@
             android:numColumns="auto_fit"
             android:stretchMode="columnWidth"
             android:verticalSpacing="10dp" />
+
+        <ImageView
+            android:id="@+id/sad_face"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/ic_action_sad" 
+            android:visibility="gone">
+        </ImageView>
+        
+        <TextView
+            android:id="@+id/no_friends_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="No Friends Found"
+            android:layout_marginBottom="10dp"/>
     </LinearLayout>
 
 </LinearLayout>

@@ -8,7 +8,7 @@ import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.R.drawable;
 import com.kau.jonathan.umdschedulesharer.R.id;
 import com.kau.jonathan.umdschedulesharer.R.layout;
-import com.kau.jonathan.umdschedulesharer.adapters.PicassoSampleAdapter.ViewHolder;
+import com.kau.jonathan.umdschedulesharer.adapters.FriendListAdapter.ViewHolder;
 import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 import com.kau.jonathan.umdschedulesharer.models.ClassDataHolder.FriendSectionData;
 import com.squareup.picasso.Picasso;

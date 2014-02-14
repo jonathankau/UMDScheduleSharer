@@ -24,6 +24,8 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.view.Display;
 import android.view.Gravity;
@@ -38,16 +40,18 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.R.drawable;
 import com.kau.jonathan.umdschedulesharer.R.id;
 import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.activities.SignInActivity;
 import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 import com.kau.jonathan.umdschedulesharer.views.TouchImageView;
 import com.squareup.picasso.Picasso;
 
-public class PicassoSampleAdapter extends BaseAdapter {
+public class FriendListAdapter extends BaseAdapter {
 	private final LayoutInflater inflater;
 	LinkedList<FriendDataHolder> data;
 	Context context;
@@ -56,7 +60,7 @@ public class PicassoSampleAdapter extends BaseAdapter {
 	Typeface face;
 	Typeface lightface;
 
-	public PicassoSampleAdapter(Context context, LinkedList<FriendDataHolder> parsed, Set<String> classes, String accessToken) {
+	public FriendListAdapter(Context context, LinkedList<FriendDataHolder> parsed, Set<String> classes, String accessToken) {
 		inflater = LayoutInflater.from(context);
 		this.context = context;
 		data = parsed;
@@ -86,6 +90,13 @@ public class PicassoSampleAdapter extends BaseAdapter {
 
 	@Override public long getItemId(int position) {
 		return ((FriendDataHolder) data.get(position)).getFacebookID();
+	}
+
+	private boolean isNetworkAvailable() {
+		ConnectivityManager connectivityManager 
+		= (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
 	@Override public View getView(int position, View view, ViewGroup parent) {
@@ -126,29 +137,35 @@ public class PicassoSampleAdapter extends BaseAdapter {
 			OnClickListener yourClickListener = new OnClickListener() {
 				public void onClick(View v) {
 
-					// Open image dialog
-					Dialog dialog = new Dialog(context);
-					dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-					dialog.setContentView(R.layout.dialog_image);
+					if(isNetworkAvailable()) {
+
+						// Open image dialog
+						Dialog dialog = new Dialog(context);
+						dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+						dialog.setContentView(R.layout.dialog_image);
 
 
-					Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+						Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-					int DisplayWidth = (int) (display.getWidth());
+						int DisplayWidth = (int) (display.getWidth());
 
-					// Set your dialog width and height dynamically as per your screen.
+						// Set your dialog width and height dynamically as per your screen.
 
-					Window window = dialog.getWindow();
-					window.setLayout(DisplayWidth , LayoutParams.WRAP_CONTENT);
-					window.setGravity(Gravity.CENTER);
+						Window window = dialog.getWindow();
+						window.setLayout(DisplayWidth , LayoutParams.WRAP_CONTENT);
+						window.setGravity(Gravity.CENTER);
 
-					dialog.show();
+						dialog.show();
 
-					SpecialParams params = new SpecialParams();
-					params.dialog = dialog;
-					params.fb_id = fb_id;
+						SpecialParams params = new SpecialParams();
+						params.dialog = dialog;
+						params.fb_id = fb_id;
 
-					new RetrieveScheduleImg().execute(params);
+						new RetrieveScheduleImg().execute(params);
+
+					} else {
+						Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show();
+					}
 
 
 				}
@@ -175,7 +192,7 @@ public class PicassoSampleAdapter extends BaseAdapter {
 		Dialog dialog;
 		long fb_id;
 		Bitmap img;
-		
+
 		@Override
 		protected void onPreExecute(){
 			//dialog.findViewById(R.id.dialog_progress).setVisibility(View.VISIBLE);
@@ -219,9 +236,9 @@ public class PicassoSampleAdapter extends BaseAdapter {
 					entity.writeTo(out);
 					out.close();
 					// do something with response 
-					
+
 					Options options = new BitmapFactory.Options();
-				    options.inScaled = false;
+					options.inScaled = false;
 
 					img = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length, options);
 				} else {
@@ -244,13 +261,13 @@ public class PicassoSampleAdapter extends BaseAdapter {
 			TouchImageView sched = (TouchImageView) dialog.findViewById(R.id.friend_img);
 
 			if(img != null) {
-				
+
 				Display display =((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
 				int displayWidth = (int) (display.getWidth());
 				float floatHeight = (((float) displayWidth / (float) img.getWidth()) * (float) img.getHeight());
 				int displayHeight = (int) floatHeight;
-				
+
 				Bitmap scaledBitmap = Bitmap.createBitmap(displayWidth, displayHeight, Config.ARGB_8888);
 
 				float ratioX = displayWidth / (float) img.getWidth();
@@ -264,10 +281,10 @@ public class PicassoSampleAdapter extends BaseAdapter {
 				Canvas canvas = new Canvas(scaledBitmap);
 				canvas.setMatrix(scaleMatrix);
 				canvas.drawBitmap(img, middleX - img.getWidth() / 2, middleY - img.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
-				
+
 				sched.setImageBitmap(scaledBitmap);
 
-				
+
 				Window window = dialog.getWindow();
 				window.setLayout(displayWidth, displayHeight);
 				window.setGravity(Gravity.CENTER);

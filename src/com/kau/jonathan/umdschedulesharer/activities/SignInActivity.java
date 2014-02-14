@@ -27,6 +27,8 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
@@ -58,11 +60,6 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 import com.facebook.widget.ProfilePictureView;
 import com.kau.jonathan.umdschedulesharer.R;
-import com.kau.jonathan.umdschedulesharer.R.array;
-import com.kau.jonathan.umdschedulesharer.R.drawable;
-import com.kau.jonathan.umdschedulesharer.R.id;
-import com.kau.jonathan.umdschedulesharer.R.layout;
-import com.kau.jonathan.umdschedulesharer.R.menu;
 
 public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;
@@ -89,24 +86,24 @@ public class SignInActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sign_in);
-		
+
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
 		uiHelper.onCreate(savedInstanceState);
-		
+
 		try {
 			PackageInfo info = getPackageManager().getPackageInfo("com.kau.jonathan.umdschedulesharer", PackageManager.GET_SIGNATURES);
 			for (Signature signature : info.signatures) {
-			    MessageDigest md = MessageDigest.getInstance("SHA");
-			    md.update(signature.toByteArray());
-			    Log.e("MY KEY HASH:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+				MessageDigest md = MessageDigest.getInstance("SHA");
+				md.update(signature.toByteArray());
+				Log.e("MY KEY HASH:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
 			}
-			} catch (NameNotFoundException e) {
+		} catch (NameNotFoundException e) {
 
-			} catch (NoSuchAlgorithmException e) {
+		} catch (NoSuchAlgorithmException e) {
 
-			}
+		}
 
 		// Check to see if user has gotten schedule already
 		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
@@ -136,7 +133,7 @@ public class SignInActivity extends Activity {
 				"fonts/Lato-Reg.ttf");
 		final Typeface boldface=Typeface.createFromAsset(this.getAssets(),
 				"fonts/Lato-Bol.ttf");
-		
+
 		// Facebook Login Button
 		LoginButton login = (LoginButton)findViewById(R.id.fb_login);
 		login.setTypeface(face);
@@ -213,7 +210,7 @@ public class SignInActivity extends Activity {
 			public void onCompleted(GraphUser user, Response response) {
 				// If the response is successful
 				if(loggingIn != null) loggingIn.dismiss();
-				
+
 
 				// Show views
 				//profilePictureView.setVisibility(View.VISIBLE);
@@ -400,13 +397,24 @@ public class SignInActivity extends Activity {
 						InputMethodManager.HIDE_NOT_ALWAYS);
 			}
 
-			// Show dialog
-			umdLoginDialog = ProgressDialog.show(
-					SignInActivity.this, "", "Signing In", true);
-			loginProcess();
+			if(isNetworkAvailable()) {			
+				// Show dialog
+				umdLoginDialog = ProgressDialog.show(
+						SignInActivity.this, "", "Signing In", true);
+				loginProcess();
+			} else {
+				Toast.makeText(SignInActivity.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+			}
 		} else {
 			Toast.makeText(SignInActivity.this, "Please fill out both login fields", Toast.LENGTH_SHORT).show();
 		}
+	}
+
+	private boolean isNetworkAvailable() {
+		ConnectivityManager connectivityManager 
+		= (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -568,8 +576,8 @@ public class SignInActivity extends Activity {
 					double zoom = 1;
 					double height = 100;
 					//if (densityDPI > 1.5) {
-						zoom = 1.35;
-						//height = 110;
+					zoom = 1.35;
+					//height = 110;
 					//}
 
 					final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
@@ -579,7 +587,7 @@ public class SignInActivity extends Activity {
 					final String body = "<body><div id='table'><div id='cell'>";
 					//final String footer = "<br><font size=+2><b>www.umdsocialscheduler.com</b></font></div></div></body></html>";
 					final String footer = "";
-					
+
 					//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
 					//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
 

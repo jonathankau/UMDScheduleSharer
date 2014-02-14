@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/classes_frag"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical" >
 
-   <FrameLayout
+    <FrameLayout
         android:id="@+id/classes_progress_frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        android:visibility="gone" 
-        android:gravity="center">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone" >
 
         <ProgressBar
             android:id="@+id/classes_progress_bar"
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_gravity="center">
+            android:layout_gravity="center"
+            android:gravity="center" >
         </ProgressBar>
     </FrameLayout>
 
@@ -30,5 +31,23 @@
         android:divider="@null"
         android:orientation="vertical" />
 
+    <TextView
+        android:id="@+id/no_internet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Internet Connection"
+        android:textSize="18sp"
+        android:visibility="gone"
+        android:color="@color/twitter_grey" />
+
+    <TextView
+        android:id="@+id/tap_to_retry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to Retry"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:color="@color/twitter_grey" 
+        android:paddingTop="5dp"/>
 
 </LinearLayout>
