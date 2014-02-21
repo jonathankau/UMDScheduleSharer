@@ -645,7 +645,7 @@ public class ScheduleActivity extends ActionBarActivity {
 	public HashMap<String, String> parseScheduleData(String incoming) {
 		HashMap<String, String> output = new LinkedHashMap<String, String>();
 
-		String REGEX = "C(\\S*)(\\s|H)(0\\S*)A";
+		String REGEX = "C(\\S*)(\\s|H)(\\S*)A";
 		Pattern p = Pattern.compile(REGEX);
 		Matcher m = p.matcher(incoming);
 
