@@ -32,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -40,7 +41,6 @@ import android.widget.TextView;
 import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
 import com.kau.jonathan.umdschedulesharer.adapters.FriendListAdapter;
-import com.kau.jonathan.umdschedulesharer.fragments.ClassesFragment.RetrieveDataTask;
 import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 
 public class FriendsFragment extends ListFragment {
@@ -49,6 +49,7 @@ public class FriendsFragment extends ListFragment {
 	private LinearLayout friends_frag;
 	private TextView no_internet;
 	private TextView tap_to_retry;
+	private CheckBox allow_sharing;
 	Set<String> classes;
 
 	public FriendsFragment(){
@@ -64,7 +65,7 @@ public class FriendsFragment extends ListFragment {
 		friends_frag = (LinearLayout) rootView.findViewById(R.id.friends_frag);
 		no_internet = (TextView) rootView.findViewById(R.id.no_internet);
 		tap_to_retry = (TextView) rootView.findViewById(R.id.tap_to_retry);
-
+		allow_sharing = (CheckBox) rootView.findViewById(R.id.allow_sharing);
 		classes = ((ScheduleActivity) getActivity()).classes.keySet();
 
 		// Generate typefaces
@@ -75,6 +76,7 @@ public class FriendsFragment extends ListFragment {
 
 		no_internet.setTypeface(face);
 		tap_to_retry.setTypeface(face);
+		allow_sharing.setTypeface(face);
 
 		return rootView;
 	}
@@ -107,7 +109,7 @@ public class FriendsFragment extends ListFragment {
 		ConnectivityManager connectivityManager 
 		= (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
 
 	private class RetrieveFriendsTask extends AsyncTask <Void,Void,Void>{
@@ -250,6 +252,11 @@ public class FriendsFragment extends ListFragment {
 				FriendsFragment.this.getListView().setVisibility(View.VISIBLE);
 				no_internet.setVisibility(View.GONE);
 				tap_to_retry.setVisibility(View.GONE);
+
+			} else {
+				FriendsFragment.this.getListView().setVisibility(View.GONE);
+				no_internet.setVisibility(View.VISIBLE);
+				tap_to_retry.setVisibility(View.VISIBLE);				
 				
 				friends_frag.setOnClickListener(new OnClickListener(){
 
@@ -261,13 +268,7 @@ public class FriendsFragment extends ListFragment {
 						new RetrieveFriendsTask().execute();
 					}
 
-				});
-			} else {
-				FriendsFragment.this.getListView().setVisibility(View.GONE);
-				no_internet.setVisibility(View.VISIBLE);
-				tap_to_retry.setVisibility(View.VISIBLE);
-				
-				
+				});				
 			}
 		}
 	}

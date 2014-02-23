@@ -106,7 +106,7 @@ public class ClassesFragment extends ListFragment {
 		ConnectivityManager connectivityManager 
 		= (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
 
 	class RetrieveDataTask extends AsyncTask<Void, Void, Void> {
@@ -241,6 +241,11 @@ public class ClassesFragment extends ListFragment {
 				no_internet.setVisibility(View.GONE);
 				tap_to_retry.setVisibility(View.GONE);
 				
+			} else {
+				ClassesFragment.this.getListView().setVisibility(View.GONE);
+				no_internet.setVisibility(View.VISIBLE);
+				tap_to_retry.setVisibility(View.VISIBLE);
+				
 				classes_frag.setOnClickListener(new OnClickListener(){
 
 					@Override
@@ -252,10 +257,6 @@ public class ClassesFragment extends ListFragment {
 					}
 					
 				});
-			} else {
-				ClassesFragment.this.getListView().setVisibility(View.GONE);
-				no_internet.setVisibility(View.VISIBLE);
-				tap_to_retry.setVisibility(View.VISIBLE);
 			}
 		}
 	}
