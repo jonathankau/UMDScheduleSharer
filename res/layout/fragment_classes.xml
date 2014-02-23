@@ -27,7 +27,8 @@
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="10dp"
+        android:paddingBottom="10dp"
+        android:clipToPadding="false" 
         android:divider="@null"
         android:orientation="vertical" />
 
