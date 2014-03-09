@@ -37,6 +37,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
@@ -78,6 +79,20 @@ public class FriendsFragment extends ListFragment {
 		tap_to_retry.setTypeface(face);
 		allow_sharing.setTypeface(face);
 
+		// Set listener for checkbox
+		allow_sharing.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				if(((CheckBox)v).isChecked()){
+					new UpdateShareTask().execute(true);
+				}else{
+					new UpdateShareTask().execute(false);
+				}
+			}
+		});
+
 		return rootView;
 	}
 
@@ -90,6 +105,7 @@ public class FriendsFragment extends ListFragment {
 			no_internet.setVisibility(View.VISIBLE);
 			tap_to_retry.setVisibility(View.VISIBLE);
 			this.getListView().setVisibility(View.GONE);
+			allow_sharing.setVisibility(View.GONE);
 
 			friends_frag.setOnClickListener(new OnClickListener(){
 
@@ -112,11 +128,93 @@ public class FriendsFragment extends ListFragment {
 		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
 
+	private class UpdateShareTask extends AsyncTask <Boolean, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Boolean... params) {
+
+			boolean allowSharing = params[0];
+
+
+			// Instantiate UMD Social Scheduler Session
+			HttpClient httpClient = new DefaultHttpClient();  
+			String url = "http://www.umdsocialscheduler.com/access?access_token=" + ((ScheduleActivity) getActivity()).accessToken;
+			HttpGet httpGet = new HttpGet(url);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+				} else {
+					// handle bad response
+				}
+
+				response.getEntity().consumeContent();
+			} catch (ClientProtocolException e) {
+				// handle exception
+			} catch (IOException e) {
+				// handle exception
+			}
+
+			// Send GET request to enable/disable sharing
+			if(allowSharing) {
+				url = "http://www.umdsocialscheduler.com/enable_sharing?";
+				httpGet = new HttpGet(url);
+				try {
+					HttpResponse response = httpClient.execute(httpGet);
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+						HttpEntity entity = response.getEntity();
+						ByteArrayOutputStream out = new ByteArrayOutputStream();
+						entity.writeTo(out);
+						out.close();
+					} else {
+						// handle bad response
+					}
+
+					response.getEntity().consumeContent();
+				} catch (ClientProtocolException e) {
+					// handle exception
+				} catch (IOException e) {
+					// handle exception
+				}
+			} else {
+				url = "http://www.umdsocialscheduler.com/disable_sharing?";
+				httpGet = new HttpGet(url);
+				try {
+					HttpResponse response = httpClient.execute(httpGet);
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+						HttpEntity entity = response.getEntity();
+						ByteArrayOutputStream out = new ByteArrayOutputStream();
+						entity.writeTo(out);
+						out.close();
+					} else {
+						// handle bad response
+					}
+
+					response.getEntity().consumeContent();
+				} catch (ClientProtocolException e) {
+					// handle exception
+				} catch (IOException e) {
+					// handle exception
+				}
+			}
+
+			return null;
+		}		
+
+	}
+
 	private class RetrieveFriendsTask extends AsyncTask <Void,Void,Void>{
 		String url;
 		String responseStr;
 		String dataStr;
 		boolean success = false;
+		boolean allowSharing = true;
 		HashMap<String, FriendDataHolder> parsedData = new HashMap<String, FriendDataHolder>();
 
 		@Override
@@ -140,6 +238,10 @@ public class FriendsFragment extends ListFragment {
 					entity.writeTo(out);
 					out.close();
 					responseStr = out.toString();
+
+					JSONObject data = new JSONObject(responseStr);
+					allowSharing = data.getJSONObject("data").getBoolean("share");
+
 					// do something with response 
 					success = true;
 				} else {
@@ -151,6 +253,9 @@ public class FriendsFragment extends ListFragment {
 				// handle exception
 			} catch (IOException e) {
 				// handle exception
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 			url = "http://www.umdsocialscheduler.com/friends_with_app?";
@@ -240,6 +345,12 @@ public class FriendsFragment extends ListFragment {
 			bar.setVisibility(View.GONE);
 			frame.setVisibility(View.GONE);
 
+			if(allowSharing) {
+				allow_sharing.setChecked(true);
+			} else {
+				allow_sharing.setChecked(false);
+			}
+
 			if(success) {
 				LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
 				data.addAll(parsedData.values());
@@ -248,16 +359,18 @@ public class FriendsFragment extends ListFragment {
 				FriendListAdapter adapter = new FriendListAdapter(FriendsFragment.this.getActivity(), data, 
 						((ScheduleActivity) getActivity()).classes.keySet(), ((ScheduleActivity) getActivity()).accessToken);
 				setListAdapter(adapter);
-				
-				FriendsFragment.this.getListView().setVisibility(View.VISIBLE);
-				no_internet.setVisibility(View.GONE);
-				tap_to_retry.setVisibility(View.GONE);
 
-			} else {
+				FriendsFragment.this.getListView().setVisibility(View.VISIBLE);
+				allow_sharing.setVisibility(View.VISIBLE);
+				no_internet.setVisibility(View.GONE);
+				tap_to_retry.setVisibility(View.GONE);	
+
+			} else { // Display retry window
 				FriendsFragment.this.getListView().setVisibility(View.GONE);
+				allow_sharing.setVisibility(View.GONE);
 				no_internet.setVisibility(View.VISIBLE);
 				tap_to_retry.setVisibility(View.VISIBLE);				
-				
+
 				friends_frag.setOnClickListener(new OnClickListener(){
 
 					@Override
