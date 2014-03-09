@@ -24,14 +24,6 @@
         android:gravity="center"
         android:visibility="invisible"/>
 
-    <ImageView
-        android:paddingBottom="30dp"
-        android:id="@+id/terp_logo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/terp_logo" 
-        android:visibility="invisible"/>
-
     <com.facebook.widget.LoginButton
         style="@style/WhiteButton"
         android:background="@drawable/white_button"
