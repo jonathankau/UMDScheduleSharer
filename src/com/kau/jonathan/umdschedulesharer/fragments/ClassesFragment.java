@@ -35,6 +35,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
@@ -83,6 +84,7 @@ public class ClassesFragment extends ListFragment {
 		super.onActivityCreated(savedInstanceState);
 		if(isNetworkAvailable()) {
 			new RetrieveDataTask().execute();
+			Toast.makeText(getActivity(), "Network Available1", 0).show();
 		} else {
 			no_internet.setVisibility(View.VISIBLE);
 			tap_to_retry.setVisibility(View.VISIBLE);
@@ -151,8 +153,10 @@ public class ClassesFragment extends ListFragment {
 						entity.writeTo(out);
 						out.close();
 						responseStr = out.toString();
+						JSONObject data = new JSONObject(responseStr);
+						
 						// do something with response 
-						success = true;
+						success = data.getBoolean("success");
 					} else {
 						success = false;
 					}
@@ -162,6 +166,9 @@ public class ClassesFragment extends ListFragment {
 					success = false;
 				} catch (IOException e) {
 					success = false;
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 
 				for(String s: classes.keySet()) {
@@ -227,7 +234,7 @@ public class ClassesFragment extends ListFragment {
 
 		protected void onPostExecute(Void v) {	  
 
-			//Toast.makeText(getActivity(), responseStr, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getActivity(), Boolean.toString(success), 0).show();
 			//Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
 
 			bar.setVisibility(View.GONE);
