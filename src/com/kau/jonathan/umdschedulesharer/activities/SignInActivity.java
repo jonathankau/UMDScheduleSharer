@@ -9,8 +9,10 @@ import java.security.NoSuchAlgorithmException;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -20,7 +22,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Picture;
 import android.graphics.PorterDuff.Mode;
@@ -30,6 +31,7 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -90,7 +92,7 @@ public class SignInActivity extends Activity {
 		setContentView(R.layout.activity_sign_in);
 
 		// Initialize the WebView and edit settings
-		WebView view = (WebView) findViewById(R.id.login_page);
+		final WebView view = (WebView) findViewById(R.id.login_page);
 		view.getSettings().setJavaScriptEnabled(true);
 		view.getSettings().setBuiltInZoomControls(true);
 		view.getSettings().setDomStorageEnabled(true);
@@ -99,6 +101,7 @@ public class SignInActivity extends Activity {
 		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 		view.getSettings().setSavePassword(false);
 		view.getSettings().setSaveFormData(false);
+		view.getSettings().setLoadsImagesAutomatically(false);
 		view.clearCache(true);
 		view.clearHistory();
 		view.clearSslPreferences();
@@ -109,38 +112,27 @@ public class SignInActivity extends Activity {
 		CookieManager.getInstance().setAcceptCookie(true);
 		CookieManager.getInstance().removeAllCookie();
 
-		// Sets the webview client for loading and accessing the HTML source of the schedule
-		view.setWebViewClient(new WebViewClient() {
-			@Override  
-			public boolean shouldOverrideUrlLoading(WebView view, String url)  
-			{  
-				return false; 
-			}  
+		//if(isNetworkAvailable()) {
+		registerReceiver(new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				boolean connected = isNetworkAvailable();
 
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
-				loginLoaded = true;
-				
-				// Wait for completed login using UID       
-				CookieManager manager = CookieManager.getInstance();
+				//Toast.makeText(SignInActivity.this, "Connectivity changed: " + connected, 0).show();
 
-				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-					if(!view.getUrl().contains("0")) { // Incorrect login
-						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-						umdLoginDialog.dismiss();
-					} else { // Correct login
-
-						// Load the actual schedule page
-						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+				if(connected) {
+					// Get user data
+					Session session = Session.getActiveSession();
+					if (session != null && session.isOpened()) {
+						makeMeRequest(session);
 					}
+
+					preloadLogin(view);
+				} else {
+					loginLoaded = false;
 				}
 			}
-		});
-
-		// Load the actual schedule page
-		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");		
+		}, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+		//}
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
@@ -246,6 +238,43 @@ public class SignInActivity extends Activity {
 			makeMeRequest(session);
 		}
 
+	}
+
+	private void preloadLogin(WebView view) {
+		loginLoaded = false;
+
+		// Sets the webview client for loading and accessing the HTML source of the schedule
+		view.setWebViewClient(new WebViewClient() {
+			@Override  
+			public boolean shouldOverrideUrlLoading(WebView view, String url)  
+			{  
+				return false; 
+			}  
+
+			@SuppressWarnings("deprecation")
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				//Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
+				loginLoaded = true;
+
+				// Wait for completed login using UID       
+				CookieManager manager = CookieManager.getInstance();
+
+				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
+					if(!view.getUrl().contains("0")) { // Incorrect login
+						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+						umdLoginDialog.dismiss();
+					} else { // Correct login
+
+						// Load the actual schedule page
+						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+					}
+				}
+			}
+		});
+
+		// Load the actual schedule page
+		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt?cached=false&redirect=https%3A%2F%2Fmobilemy.umd.edu%2Fportal%2Fserver.pt%2Fgateway%2FPTARGS_0_340574_368_211_0_43%2Fhttps%3B%2Fwww.sis.umd.edu%2Ftestudo%2FstudentSched%3Fterm%3D201401&space=Login");		
 	}
 
 	@Override
@@ -480,6 +509,19 @@ public class SignInActivity extends Activity {
 
 		// Initialize the WebView and edit settings
 		WebView view = (WebView) findViewById(R.id.login_page);
+		view.getSettings().setJavaScriptEnabled(true);
+		view.getSettings().setBuiltInZoomControls(true);
+		view.getSettings().setDomStorageEnabled(true);
+		view.getSettings().setLoadWithOverviewMode(true);
+		view.getSettings().setUseWideViewPort(true);
+		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+		view.getSettings().setLoadsImagesAutomatically(false);
+		view.getSettings().setSavePassword(false);
+		view.getSettings().setSaveFormData(false);
+		view.clearCache(true);
+		view.clearHistory();
+		view.clearSslPreferences();
+		view.clearFormData();
 
 
 		/* Register a new JavaScript interface called HTMLOUT */
@@ -508,8 +550,6 @@ public class SignInActivity extends Activity {
 						injectJavascript(view);
 					}
 
-					//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
-
 					// Wait for completed login using UID       
 					CookieManager manager = CookieManager.getInstance();
 
@@ -528,11 +568,11 @@ public class SignInActivity extends Activity {
 			});
 
 			// Load the actual schedule page
-			view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+			view.loadUrl("https://mobilemy.umd.edu/portal/server.pt?cached=false&redirect=https%3A%2F%2Fmobilemy.umd.edu%2Fportal%2Fserver.pt%2Fgateway%2FPTARGS_0_340574_368_211_0_43%2Fhttps%3B%2Fwww.sis.umd.edu%2Ftestudo%2FstudentSched%3Fterm%3D201401&space=Login");
 
 		}
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	public void injectJavascript(WebView view) {
 		// Sets the webview client for loading and accessing the HTML source of the schedule
