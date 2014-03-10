@@ -1,7 +1,9 @@
 package com.kau.jonathan.umdschedulesharer.activities;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,6 +11,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONObject;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
@@ -27,6 +43,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.PictureDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -59,11 +76,6 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.widget.FacebookDialog;
 import com.kau.jonathan.umdschedulesharer.R;
-import com.kau.jonathan.umdschedulesharer.R.color;
-import com.kau.jonathan.umdschedulesharer.R.drawable;
-import com.kau.jonathan.umdschedulesharer.R.id;
-import com.kau.jonathan.umdschedulesharer.R.layout;
-import com.kau.jonathan.umdschedulesharer.R.menu;
 import com.kau.jonathan.umdschedulesharer.fragments.ClassesFragment;
 import com.kau.jonathan.umdschedulesharer.fragments.FriendsFragment;
 import com.kau.jonathan.umdschedulesharer.fragments.ScheduleFragment;
@@ -102,8 +114,12 @@ public class ScheduleActivity extends ActionBarActivity {
 		if (state.isOpened()) {			
 			if(session != null) {
 				//Toast.makeText(ScheduleActivity.this, session.getAccessToken(), Toast.LENGTH_SHORT).show();
-
 				accessToken = session.getAccessToken();
+				
+				if(classes != null) {
+					// Add schedule data to Albert's backend
+					new AddScheduleDataTask().execute(classes);
+				}
 			}
 
 			if (pendingPublishReauthorization && 
@@ -645,18 +661,104 @@ public class ScheduleActivity extends ActionBarActivity {
 	public HashMap<String, String> parseScheduleData(String incoming) {
 		HashMap<String, String> output = new LinkedHashMap<String, String>();
 
-		String REGEX = "C(\\S*)(\\s|H)(\\S*)A";
+		String REGEX = "C(\\S*)(\\s|H)(\\S*)A"; // Group 1 = class name, Group 3 = section
 		Pattern p = Pattern.compile(REGEX);
 		Matcher m = p.matcher(incoming);
 
 		while(m.find()) {
 			String className = m.group(1);
-			if(m.group(2) == "H") className = className + "H";
+			if(m.group(2).equals("H")) className = className + "H";
 			output.put(className, m.group(3));
-			//Toast.makeText(ScheduleActivity.this, m.group(1) + " " + m.group(2), Toast.LENGTH_SHORT).show();
 		}
 
 		return output;
+	}
+
+
+
+	private class AddScheduleDataTask extends AsyncTask <HashMap<String, String>, Void, Void> {
+		String responseStr;
+		StringBuffer output;
+		String postOutput;
+		
+		@Override
+		protected Void doInBackground(HashMap<String, String>... params) {
+			HashMap<String, String> data = params[0];
+			output = new StringBuffer("");
+
+			for(String s: data.keySet()) {
+				output.append(s + "," + data.get(s) + "|");
+			}
+			
+			postOutput = output.toString();
+			
+			if(postOutput.length() != 0 && postOutput.charAt(postOutput.length() - 1) == '|') {
+				postOutput = postOutput.substring(0, postOutput.length() - 1);
+			}
+
+			// Instantiate UMD Social Scheduler Session
+			HttpClient httpClient = new DefaultHttpClient();  
+			String url = "http://www.umdsocialscheduler.com/access?access_token=" + accessToken;
+			HttpGet httpGet = new HttpGet(url);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+				} else {
+					// handle bad response
+				}
+
+				response.getEntity().consumeContent();
+			} catch (ClientProtocolException e) {
+				// handle exception
+			} catch (IOException e) {
+				// handle exception
+			}
+
+			// Send POST request with data to Albert's backend
+			HttpPost httpPost = new HttpPost("http://www.umdsocialscheduler.com/add_schedule");
+
+		    try {
+		        // Add your data
+		        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+		        nameValuePairs.add(new BasicNameValuePair("term", "201401")); // TODO: FIX THIS
+		        nameValuePairs.add(new BasicNameValuePair("schedule", output.toString()));
+		        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+		        // Execute HTTP Post Request
+		        HttpResponse response = httpClient.execute(httpPost);
+		        
+		        StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					responseStr = out.toString();
+				} else {
+					// handle bad response
+				}
+		        
+		        response.getEntity().consumeContent();
+		        
+		    } catch (ClientProtocolException e) {
+		        // TODO Auto-generated catch block
+		    } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		    }
+		    
+			return null;			
+		}		
+		
+		protected void onPostExecute(Void v) {
+			//Toast.makeText(ScheduleActivity.this, responseStr, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(ScheduleActivity.this, postOutput, Toast.LENGTH_SHORT).show();
+		}
+
 	}
 
 }

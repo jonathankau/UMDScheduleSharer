@@ -74,6 +74,8 @@ public class SignInActivity extends Activity {
 	EditText umd_password;
 	Bitmap defaultFacebookPic;
 
+	boolean loginLoaded = false;
+
 	private UiLifecycleHelper uiHelper;
 	private Session.StatusCallback callback = new Session.StatusCallback() {
 		@Override
@@ -87,6 +89,58 @@ public class SignInActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sign_in);
 
+		// Initialize the WebView and edit settings
+		WebView view = (WebView) findViewById(R.id.login_page);
+		view.getSettings().setJavaScriptEnabled(true);
+		view.getSettings().setBuiltInZoomControls(true);
+		view.getSettings().setDomStorageEnabled(true);
+		view.getSettings().setLoadWithOverviewMode(true);
+		view.getSettings().setUseWideViewPort(true);
+		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+		view.getSettings().setSavePassword(false);
+		view.getSettings().setSaveFormData(false);
+		view.clearCache(true);
+		view.clearHistory();
+		view.clearSslPreferences();
+		view.clearFormData();
+
+		CookieSyncManager.createInstance(this);
+		CookieSyncManager.getInstance().startSync();
+		CookieManager.getInstance().setAcceptCookie(true);
+		CookieManager.getInstance().removeAllCookie();
+
+		// Sets the webview client for loading and accessing the HTML source of the schedule
+		view.setWebViewClient(new WebViewClient() {
+			@Override  
+			public boolean shouldOverrideUrlLoading(WebView view, String url)  
+			{  
+				return false; 
+			}  
+
+			@SuppressWarnings("deprecation")
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
+				loginLoaded = true;
+				
+				// Wait for completed login using UID       
+				CookieManager manager = CookieManager.getInstance();
+
+				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
+					if(!view.getUrl().contains("0")) { // Incorrect login
+						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+						umdLoginDialog.dismiss();
+					} else { // Correct login
+
+						// Load the actual schedule page
+						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+					}
+				}
+			}
+		});
+
+		// Load the actual schedule page
+		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");		
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
@@ -424,106 +478,93 @@ public class SignInActivity extends Activity {
 	@SuppressLint({ "JavascriptInterface", "NewApi" })
 	public void loginProcess() {
 
-		String loadUrl = "http://mobilemy.umd.edu/";
-
 		// Initialize the WebView and edit settings
 		WebView view = (WebView) findViewById(R.id.login_page);
-		view.getSettings().setJavaScriptEnabled(true);
-		view.getSettings().setBuiltInZoomControls(true);
-		view.getSettings().setDomStorageEnabled(true);
-		view.getSettings().setLoadWithOverviewMode(true);
-		view.getSettings().setUseWideViewPort(true);
-		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-		view.getSettings().setSavePassword(false);
-		view.getSettings().setSaveFormData(false);
-		view.clearCache(true);
-		view.clearHistory();
-		view.clearSslPreferences();
-		view.clearFormData();
-
-		CookieSyncManager.createInstance(this);
-		CookieSyncManager.getInstance().startSync();
-		CookieManager.getInstance().setAcceptCookie(true);
-		CookieManager.getInstance().removeAllCookie();
 
 
 		/* Register a new JavaScript interface called HTMLOUT */
 		view.addJavascriptInterface(new MyJavaScriptInterface(this), "HTMLOUT");
 
+
+		if(loginLoaded) {
+			injectJavascript(view);
+		} else {
+			// Sets the webview client for loading and accessing the HTML source of the schedule
+			view.setWebViewClient(new WebViewClient() {
+				int count = 0;
+
+				@Override  
+				public boolean shouldOverrideUrlLoading(WebView view, String url)  
+				{  
+					return false; 
+				}  
+
+				@SuppressWarnings("deprecation")
+				@Override
+				public void onPageFinished(WebView view, String url) {
+					if (count == 0) {
+						count++;
+						// Sets the webview client for loading and accessing the HTML source of the schedule
+						injectJavascript(view);
+					}
+
+					//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
+
+					// Wait for completed login using UID       
+					CookieManager manager = CookieManager.getInstance();
+
+					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
+						if(!view.getUrl().contains("0")) { // Incorrect login
+							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+							umdLoginDialog.dismiss();
+						} else { // Correct login
+
+							// Load the actual schedule page
+							view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+						}
+					}
+
+				}
+			});
+
+			// Load the actual schedule page
+			view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+
+		}
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void injectJavascript(WebView view) {
 		// Sets the webview client for loading and accessing the HTML source of the schedule
-		view.setWebViewClient(new WebViewClient() {
+		view.setPictureListener(new PictureListener() {  
 			int count = 0;
 
-			@Override  
-			public boolean shouldOverrideUrlLoading(WebView view, String url)  
-			{  
-				return false; 
-			}  
+			public void onNewPicture(WebView view, Picture picture) {
 
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onPageFinished(WebView view, String url) {
 				if (count == 0) {
 					count++;
-					// Sets the webview client for loading and accessing the HTML source of the schedule
-					view.setPictureListener(new PictureListener() {  
-						int count = 0;
 
-						public void onNewPicture(WebView view, Picture picture) {
+					// Wait for completed login using UID       
+					CookieManager manager = CookieManager.getInstance();
 
-							if (count == 0) {
-								count++;
-
-								//Toast.makeText(SignInActivity.this, "Signed into my.umd.edu!", Toast.LENGTH_SHORT).show();
-
-								// Wait for completed login using UID       
-								CookieManager manager = CookieManager.getInstance();
-								//Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
-								//Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
-
-								if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-									// Load the actual schedule page
-									view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-
-								}
-							}
-
-						}
-					});
-
-					String umd_username = ((EditText) findViewById(R.id.umd_username)).getText().toString();
-					String umd_password = ((EditText) findViewById(R.id.umd_password)).getText().toString();
-
-					view.loadUrl("javascript:(function() { " +  
-							"document.lform.in_tx_username.value='" + umd_username + "'; " +  
-							"document.lform.in_pw_userpass.value='" + umd_password + "'; " +
-							"doLogin(); " +
-							"})()");
-				}
-
-				//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
-
-				// Wait for completed login using UID       
-				CookieManager manager = CookieManager.getInstance();
-				//Toast.makeText(SignInActivity.this, Boolean.toString(manager.hasCookies()), Toast.LENGTH_SHORT).show();
-				//Toast.makeText(SignInActivity.this, "Cookie URL: " + view.getUrl(), Toast.LENGTH_SHORT).show();
-
-				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-					if(!view.getUrl().contains("0")) { // Incorrect login
-						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-						umdLoginDialog.dismiss();
-					} else { // Correct login
-
+					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
 						// Load the actual schedule page
 						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+
 					}
 				}
 
 			}
 		});
 
-		// Load the actual schedule page
-		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+		String umd_username = ((EditText) findViewById(R.id.umd_username)).getText().toString();
+		String umd_password = ((EditText) findViewById(R.id.umd_password)).getText().toString();
+
+		view.loadUrl("javascript:(function() { " +  
+				"document.lform.in_tx_username.value='" + umd_username + "'; " +  
+				"document.lform.in_pw_userpass.value='" + umd_password + "'; " +
+				"doLogin(); " +
+				"})()");
 	}
 
 
@@ -542,14 +583,9 @@ public class SignInActivity extends Activity {
 		@JavascriptInterface
 		public void processHTML(String html)
 		{
-			//Toast.makeText(SignInActivity.this, "Herro anybody" + html, Toast.LENGTH_SHORT).show();
-			//WebView scheduleBrowser = (WebView) findViewById(R.id.screenshot_page);
-			//scheduleBrowser.removeJavascriptInterface("HTMLOUT");
 
 			if(count == 0) {
 				count++;
-
-				//Toast.makeText(SignInActivity.this, "Processing HTML!" + html, Toast.LENGTH_SHORT).show();
 
 				// Determines the beginning and end of just the schedule
 				int beginIndex = html.indexOf(headerString);
@@ -575,21 +611,14 @@ public class SignInActivity extends Activity {
 					float densityDPI = getResources().getDisplayMetrics().density; 
 					double zoom = 1;
 					double height = 100;
-					//if (densityDPI > 1.5) {
 					zoom = 1.35;
-					//height = 110;
-					//}
 
 					final String header = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
 							"<head><style type='text/css'>html, body {	zoom:" + zoom + "; height: 100%;	padding: 0;	margin: 0;} " +
 							"#table {display: table; 	height: 100%;	width: 100%;} " +
 							"#cell {	display: table-cell; 	vertical-align: middle;}</style></head>";
 					final String body = "<body><div id='table'><div id='cell'>";
-					//final String footer = "<br><font size=+2><b>www.umdsocialscheduler.com</b></font></div></div></body></html>";
 					final String footer = "";
-
-					//<meta name='viewport' content='target-densityDpi=device-dpi, initial-scale = 1.2, minimum-scale=1.2'/>
-					//<style type=\"text/css\">table {position: absolute; top: 25%;} html {height:120%;}</style>
 
 					umdLoginDialog.dismiss();
 
@@ -607,42 +636,6 @@ public class SignInActivity extends Activity {
 			}    
 		}
 	}
-
-
-
-	// This function takes the WebView screenshot and crops away a large portion of the white space,
-	// returning the cropped Bitmap file.
-	public Bitmap cropBitmap(Bitmap original) {
-		int x = 0, y = 0, width = 0, height = 0;
-
-		// Calculate lower margin
-		int tempX = original.getWidth() / 2;
-		int tempY = original.getHeight() - 1;
-
-		while(original.getPixel(tempX, tempY) == Color.WHITE) {
-			tempY--;
-		}
-
-		height = tempY + 10;
-
-		// Calculate side margin
-		tempX = 0;
-		tempY = original.getHeight() / 5;
-
-		while(original.getPixel(tempX, tempY) == Color.WHITE) {
-			tempX++;
-		}
-
-		x = tempX - 10;
-		width = original.getWidth() - 2 * tempX + 20;
-
-		// Crop bitmap
-		return Bitmap.createBitmap(original, x, y, width, height, null, false);
-	}
-
-
-	//
-	//////////////////////////////////////////////////////////////////////////////////////
 
 
 }
