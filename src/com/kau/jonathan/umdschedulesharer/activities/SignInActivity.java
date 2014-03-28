@@ -23,7 +23,6 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Picture;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -31,7 +30,6 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -42,8 +40,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
-import android.webkit.WebView.PictureListener;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -75,6 +73,7 @@ public class SignInActivity extends Activity {
 	EditText umd_username;
 	EditText umd_password;
 	Bitmap defaultFacebookPic;
+	BroadcastReceiver broadcast;
 
 	boolean loginLoaded = false;
 
@@ -94,14 +93,12 @@ public class SignInActivity extends Activity {
 		// Initialize the WebView and edit settings
 		final WebView view = (WebView) findViewById(R.id.login_page);
 		view.getSettings().setJavaScriptEnabled(true);
-		view.getSettings().setBuiltInZoomControls(true);
 		view.getSettings().setDomStorageEnabled(true);
-		view.getSettings().setLoadWithOverviewMode(true);
-		view.getSettings().setUseWideViewPort(true);
 		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 		view.getSettings().setSavePassword(false);
 		view.getSettings().setSaveFormData(false);
 		view.getSettings().setLoadsImagesAutomatically(false);
+		view.getSettings().setRenderPriority(RenderPriority.HIGH);
 		view.clearCache(true);
 		view.clearHistory();
 		view.clearSslPreferences();
@@ -112,12 +109,10 @@ public class SignInActivity extends Activity {
 		CookieManager.getInstance().setAcceptCookie(true);
 		CookieManager.getInstance().removeAllCookie();
 
-		//if(isNetworkAvailable()) {
-		registerReceiver(new BroadcastReceiver() {
+
+		broadcast = new BroadcastReceiver() {
 			public void onReceive(Context context, Intent intent) {
 				boolean connected = isNetworkAvailable();
-
-				//Toast.makeText(SignInActivity.this, "Connectivity changed: " + connected, 0).show();
 
 				if(connected) {
 					// Get user data
@@ -131,8 +126,10 @@ public class SignInActivity extends Activity {
 					loginLoaded = false;
 				}
 			}
-		}, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
-		//}
+		};
+
+		registerReceiver(broadcast, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
@@ -254,21 +251,27 @@ public class SignInActivity extends Activity {
 			@SuppressWarnings("deprecation")
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				//Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
-				loginLoaded = true;
+				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
+				Toast.makeText(SignInActivity.this, view.getTitle(), 0).show();
 
-				// Wait for completed login using UID       
-				CookieManager manager = CookieManager.getInstance();
+				if(!view.getTitle().equals("Webpage not available")) {
+					loginLoaded = true; //
 
-				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-					if(!view.getUrl().contains("0")) { // Incorrect login
-						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-						umdLoginDialog.dismiss();
-					} else { // Correct login
+					// Wait for completed login using UID       
+					CookieManager manager = CookieManager.getInstance();
 
-						// Load the actual schedule page
-						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
+						if(!view.getUrl().contains("0")) { // Incorrect login
+							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+
+							if(umdLoginDialog != null) umdLoginDialog.dismiss();
+						} else { // Correct login
+
+							// Load the actual schedule page
+							view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+						}
 					}
+
 				}
 			}
 		});
@@ -509,15 +512,12 @@ public class SignInActivity extends Activity {
 
 		// Initialize the WebView and edit settings
 		WebView view = (WebView) findViewById(R.id.login_page);
-		view.getSettings().setJavaScriptEnabled(true);
-		view.getSettings().setBuiltInZoomControls(true);
-		view.getSettings().setDomStorageEnabled(true);
-		view.getSettings().setLoadWithOverviewMode(true);
-		view.getSettings().setUseWideViewPort(true);
-		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-		view.getSettings().setLoadsImagesAutomatically(false);
-		view.getSettings().setSavePassword(false);
-		view.getSettings().setSaveFormData(false);
+		//		view.getSettings().setJavaScriptEnabled(true);
+		//		view.getSettings().setDomStorageEnabled(true);
+		//		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+		//		view.getSettings().setLoadsImagesAutomatically(false);
+		//		view.getSettings().setSavePassword(false);
+		//		view.getSettings().setSaveFormData(false);
 		view.clearCache(true);
 		view.clearHistory();
 		view.clearSslPreferences();
@@ -529,6 +529,7 @@ public class SignInActivity extends Activity {
 
 
 		if(loginLoaded) {
+			Toast.makeText(SignInActivity.this, "Injecting javascript", Toast.LENGTH_SHORT).show();
 			injectJavascript(view);
 		} else {
 			// Sets the webview client for loading and accessing the HTML source of the schedule
@@ -576,10 +577,17 @@ public class SignInActivity extends Activity {
 	@SuppressWarnings("deprecation")
 	public void injectJavascript(WebView view) {
 		// Sets the webview client for loading and accessing the HTML source of the schedule
-		view.setPictureListener(new PictureListener() {  
+		view.setWebViewClient(new WebViewClient() {  
 			int count = 0;
 
-			public void onNewPicture(WebView view, Picture picture) {
+			@Override  
+			public boolean shouldOverrideUrlLoading(WebView view, String url)  
+			{  
+				return false; 
+			}  
+
+			@Override
+			public void onPageFinished(WebView view, String url) {
 
 				if (count == 0) {
 					count++;
@@ -588,8 +596,9 @@ public class SignInActivity extends Activity {
 					CookieManager manager = CookieManager.getInstance();
 
 					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-						// Load the actual schedule page
+						// Pass HTML code to interface
 						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+
 
 					}
 				}

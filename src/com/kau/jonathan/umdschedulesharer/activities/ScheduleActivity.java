@@ -264,7 +264,7 @@ public class ScheduleActivity extends ActionBarActivity {
 
 				Bundle postParams = request.getParameters();
 				postParams.putByteArray("picture", data);
-				postParams.putString("message", "Shared with UMD Social Scheduler. Download at www.umdsocialscheduler.com");
+				postParams.putString("message", "Shared with UMD Social Scheduler. Download at umdsocialscheduler.com");
 
 				request.setParameters(postParams);
 
@@ -698,7 +698,7 @@ public class ScheduleActivity extends ActionBarActivity {
 
 			// Instantiate UMD Social Scheduler Session
 			HttpClient httpClient = new DefaultHttpClient();  
-			String url = "http://www.umdsocialscheduler.com/access?access_token=" + accessToken;
+			String url = "http://umdsocialscheduler.com/access?access_token=" + accessToken;
 			HttpGet httpGet = new HttpGet(url);
 			try {
 				HttpResponse response = httpClient.execute(httpGet);
@@ -720,7 +720,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			}
 
 			// Send POST request with data to Albert's backend
-			HttpPost httpPost = new HttpPost("http://www.umdsocialscheduler.com/add_schedule");
+			HttpPost httpPost = new HttpPost("http://umdsocialscheduler.com/add_schedule");
 
 		    try {
 		        // Add your data
