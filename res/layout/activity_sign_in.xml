@@ -14,10 +14,10 @@
 
     <WebView
         android:id="@+id/login_page"
-        android:layout_width="1dp"
-        android:layout_height="1dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:scrollbars="none"
-        android:visibility="invisible" />
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/main_title"

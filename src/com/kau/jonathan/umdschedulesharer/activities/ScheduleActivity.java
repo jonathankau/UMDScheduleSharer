@@ -264,7 +264,7 @@ public class ScheduleActivity extends ActionBarActivity {
 
 				Bundle postParams = request.getParameters();
 				postParams.putByteArray("picture", data);
-				postParams.putString("message", "Shared with UMD Social Scheduler. Download at www.umdsocialscheduler.com");
+				postParams.putString("message", "Shared with UMD Social Scheduler. Download at umdsocialscheduler.com");
 
 				request.setParameters(postParams);
 
@@ -284,26 +284,6 @@ public class ScheduleActivity extends ActionBarActivity {
 		AlertDialog alertDialog = alertDialogBuilder.create();
 		alertDialog.show();
 
-
-		//		// Save bitmap to sdcard			        
-		//		String root = Environment.getExternalStorageDirectory().toString();
-		//		File myDir = new File(root + "/saved_images");    
-		//		myDir.mkdirs();
-		//		Random generator = new Random();
-		//		int n = 10000;
-		//		n = generator.nextInt(n);
-		//		String fname = "Image-"+ n +".jpg";
-		//		File file = new File (myDir, fname);
-		//		if (file.exists ()) file.delete (); 
-		//		try {
-		//			FileOutputStream out = new FileOutputStream(file);
-		//			cropped.compress(Bitmap.CompressFormat.JPEG, 90, out);
-		//			out.flush();
-		//			out.close();
-		//
-		//		} catch (Exception e) {
-		//			e.printStackTrace();
-		//		}
 
 	}
 
@@ -554,8 +534,8 @@ public class ScheduleActivity extends ActionBarActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Bring up submenu items
 		SubMenu subMenu = menu.addSubMenu("Navigation Menu");
-		subMenu.add(0, 1, Menu.NONE, "Update Schedule").setIcon(R.drawable.ic_action_refresh);
-		subMenu.add(0, 2, Menu.NONE, "Settings").setIcon(R.drawable.ic_action_settings);
+		subMenu.add(0, 1, Menu.NONE, "Switch Schedule").setIcon(R.drawable.ic_action_refresh);
+		//subMenu.add(0, 2, Menu.NONE, "Settings").setIcon(R.drawable.ic_action_settings);
 
 		MenuItem overflow = subMenu.getItem();
 		overflow.setIcon(R.drawable.ic_action_overflow);
@@ -698,7 +678,7 @@ public class ScheduleActivity extends ActionBarActivity {
 
 			// Instantiate UMD Social Scheduler Session
 			HttpClient httpClient = new DefaultHttpClient();  
-			String url = "http://www.umdsocialscheduler.com/access?access_token=" + accessToken;
+			String url = "http://umdsocialscheduler.com/access?access_token=" + accessToken;
 			HttpGet httpGet = new HttpGet(url);
 			try {
 				HttpResponse response = httpClient.execute(httpGet);
@@ -720,7 +700,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			}
 
 			// Send POST request with data to Albert's backend
-			HttpPost httpPost = new HttpPost("http://www.umdsocialscheduler.com/add_schedule");
+			HttpPost httpPost = new HttpPost("http://umdsocialscheduler.com/add_schedule");
 
 		    try {
 		        // Add your data
@@ -751,11 +731,43 @@ public class ScheduleActivity extends ActionBarActivity {
 		        // TODO Auto-generated catch block
 		    }
 		    
+			// Send POST request to render schedule
+			httpPost = new HttpPost("http://umdsocialscheduler.com/render_schedule");
+
+		    try {
+		        // Add your data
+		        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+		        nameValuePairs.add(new BasicNameValuePair("term", "201401")); // TODO: FIX THIS
+		        nameValuePairs.add(new BasicNameValuePair("html", schedule_src));
+		        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+		        // Execute HTTP Post Request
+		        HttpResponse response = httpClient.execute(httpPost);
+		        
+		        StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					responseStr = out.toString();
+				} else {
+					// handle bad response
+				}
+		        
+		        response.getEntity().consumeContent();
+		        
+		    } catch (ClientProtocolException e) {
+		        // TODO Auto-generated catch block
+		    } catch (IOException e) {
+		        // TODO Auto-generated catch block
+		    }
+		    
 			return null;			
 		}		
 		
 		protected void onPostExecute(Void v) {
-			//Toast.makeText(ScheduleActivity.this, responseStr, Toast.LENGTH_SHORT).show();
+			Toast.makeText(ScheduleActivity.this, responseStr, Toast.LENGTH_SHORT).show();
 			//Toast.makeText(ScheduleActivity.this, postOutput, Toast.LENGTH_SHORT).show();
 		}
 

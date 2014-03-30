@@ -84,7 +84,6 @@ public class ClassesFragment extends ListFragment {
 		super.onActivityCreated(savedInstanceState);
 		if(isNetworkAvailable()) {
 			new RetrieveDataTask().execute();
-			Toast.makeText(getActivity(), "Network Available1", 0).show();
 		} else {
 			no_internet.setVisibility(View.VISIBLE);
 			tap_to_retry.setVisibility(View.VISIBLE);
@@ -234,7 +233,7 @@ public class ClassesFragment extends ListFragment {
 
 		protected void onPostExecute(Void v) {	  
 
-			Toast.makeText(getActivity(), Boolean.toString(success), 0).show();
+			//Toast.makeText(getActivity(), Boolean.toString(success), 0).show();
 			//Toast.makeText(getActivity(), dataStr, Toast.LENGTH_SHORT).show();
 
 			bar.setVisibility(View.GONE);

@@ -1,16 +1,32 @@
 package com.kau.jonathan.umdschedulesharer.activities;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -18,11 +34,11 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Picture;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
@@ -33,15 +49,19 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
-import android.webkit.WebView.PictureListener;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -60,6 +80,7 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 import com.facebook.widget.ProfilePictureView;
 import com.kau.jonathan.umdschedulesharer.R;
+import com.kau.jonathan.umdschedulesharer.views.TouchImageView;
 
 public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;
@@ -73,8 +94,11 @@ public class SignInActivity extends Activity {
 	EditText umd_username;
 	EditText umd_password;
 	Bitmap defaultFacebookPic;
+	BroadcastReceiver broadcast;
+	WebView view;
 
 	boolean loginLoaded = false;
+	boolean fbLoggedIn = false;
 
 	private UiLifecycleHelper uiHelper;
 	private Session.StatusCallback callback = new Session.StatusCallback() {
@@ -90,15 +114,14 @@ public class SignInActivity extends Activity {
 		setContentView(R.layout.activity_sign_in);
 
 		// Initialize the WebView and edit settings
-		WebView view = (WebView) findViewById(R.id.login_page);
+		view = (WebView) findViewById(R.id.login_page);
 		view.getSettings().setJavaScriptEnabled(true);
-		view.getSettings().setBuiltInZoomControls(true);
 		view.getSettings().setDomStorageEnabled(true);
-		view.getSettings().setLoadWithOverviewMode(true);
-		view.getSettings().setUseWideViewPort(true);
 		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 		view.getSettings().setSavePassword(false);
 		view.getSettings().setSaveFormData(false);
+		view.getSettings().setLoadsImagesAutomatically(false);
+		view.getSettings().setRenderPriority(RenderPriority.HIGH);
 		view.clearCache(true);
 		view.clearHistory();
 		view.clearSslPreferences();
@@ -109,38 +132,25 @@ public class SignInActivity extends Activity {
 		CookieManager.getInstance().setAcceptCookie(true);
 		CookieManager.getInstance().removeAllCookie();
 
-		// Sets the webview client for loading and accessing the HTML source of the schedule
-		view.setWebViewClient(new WebViewClient() {
-			@Override  
-			public boolean shouldOverrideUrlLoading(WebView view, String url)  
-			{  
-				return false; 
-			}  
 
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
-				loginLoaded = true;
-				
-				// Wait for completed login using UID       
-				CookieManager manager = CookieManager.getInstance();
+		// Check to see if user has gotten schedule already
+		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+		int obtained_schedule = prefs.getInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0);
 
-				if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-					if(!view.getUrl().contains("0")) { // Incorrect login
-						Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-						umdLoginDialog.dismiss();
-					} else { // Correct login
+		if(obtained_schedule == 1) {
+			// Take source and send with intent to Schedule Activity
+			Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
-						// Load the actual schedule page
-						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-					}
-				}
-			}
-		});
+			// Attach source code
+			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));	
+			intent.putExtra("SCHEDULE_DATA", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_data", ""));
 
-		// Load the actual schedule page
-		view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");		
+
+			// Start activity
+			if(broadcast != null) unregisterReceiver(broadcast);
+			startActivity(intent);
+		}
+
 
 		// Facebook Session
 		uiHelper = new UiLifecycleHelper(this, callback);
@@ -157,23 +167,6 @@ public class SignInActivity extends Activity {
 
 		} catch (NoSuchAlgorithmException e) {
 
-		}
-
-		// Check to see if user has gotten schedule already
-		SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
-		int obtained_schedule = prefs.getInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0);
-
-		if(obtained_schedule == 1) {
-			// Take source and send with intent to Schedule Activity
-			Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
-
-			// Attach source code
-			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));	
-			intent.putExtra("SCHEDULE_DATA", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_data", ""));
-
-
-			// Start activity
-			startActivity(intent);
 		}
 
 		// Set default prof pic
@@ -212,6 +205,9 @@ public class SignInActivity extends Activity {
 			}
 		};
 
+		// Populate choices
+		new RetrieveSemestersTask().execute();
+
 		String[] semesters = getResources().getStringArray(R.array.semesters_array);
 
 		for(String s: semesters) {
@@ -246,6 +242,48 @@ public class SignInActivity extends Activity {
 			makeMeRequest(session);
 		}
 
+	}
+
+	private void preloadLogin(WebView view) {
+		loginLoaded = false;
+
+		// Sets the webview client for loading and accessing the HTML source of the schedule
+		view.setWebViewClient(new WebViewClient() {
+			@Override  
+			public boolean shouldOverrideUrlLoading(WebView view, String url)  
+			{  
+				return false; 
+			}  
+
+			@SuppressWarnings("deprecation")
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				//				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
+				//				Toast.makeText(SignInActivity.this, view.getTitle(), 0).show();
+
+				if(view != null && view.getTitle() != null && !view.getTitle().equals("Webpage not available")) {
+					//loginLoaded = true; //
+
+					// Wait for completed login using UID       
+					CookieManager manager = CookieManager.getInstance();
+
+					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
+						//						if(!view.getUrl().contains("0")) { // Incorrect login
+						//							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+						//
+						//							if(umdLoginDialog != null) umdLoginDialog.dismiss();
+						//						} else { // Correct login
+
+						// Load the actual schedule page
+						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+					}
+
+				}
+			}
+		});
+
+		// Load the actual schedule page
+		view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term=201401");		
 	}
 
 	@Override
@@ -284,8 +322,10 @@ public class SignInActivity extends Activity {
 
 
 						// Playing with image stuff
-						String imageUrl= "http://graph.facebook.com/" + fb_id + "/picture?type=large";
+						String imageUrl= "https://graph.facebook.com/" + fb_id + "/picture?type=large";
 						new RetrieveImgTask().execute(imageUrl);
+
+						//Toast.makeText(SignInActivity.this, fb_id, 0).show();
 					}
 				}
 				if (response.getError() != null) {
@@ -313,12 +353,16 @@ public class SignInActivity extends Activity {
 		if (session.isOpened()) {
 			// Get the user's data.
 			makeMeRequest(session);
+
+			fbLoggedIn = true;
 		} else if (session.isClosed()) {
 			// Reset views
 			defaultFacebookPic = BitmapFactory.decodeResource(getResources(),
 					R.drawable.fb_default);
 			((ImageView)findViewById(R.id.test_prof_pic)).setImageBitmap(makeCircular(defaultFacebookPic));
 			username.setVisibility(View.GONE);
+
+			fbLoggedIn = false;
 		}
 	}
 
@@ -338,6 +382,26 @@ public class SignInActivity extends Activity {
 
 		uiHelper.onResume();
 
+		broadcast = new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				boolean connected = isNetworkAvailable();
+
+				if(connected) {
+					// Get user data
+					Session session = Session.getActiveSession();
+					if (session != null && session.isOpened()) {
+						makeMeRequest(session);
+					}
+
+					preloadLogin(view);
+				} else {
+					loginLoaded = false;
+				}
+			}
+		};
+
+		registerReceiver(broadcast, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+
 	}
 
 	@Override
@@ -350,6 +414,7 @@ public class SignInActivity extends Activity {
 	public void onPause() {
 		super.onPause();
 		uiHelper.onPause();
+		unregisterReceiver(broadcast);
 	}
 
 	@Override
@@ -360,7 +425,7 @@ public class SignInActivity extends Activity {
 
 	// For circular profile image
 
-	class RetrieveImgTask extends AsyncTask<String, Void, Void> {
+	private class RetrieveImgTask extends AsyncTask<String, Void, Void> {
 		private Bitmap bitmap;
 		private Bitmap output;
 		private Exception exception;
@@ -369,19 +434,29 @@ public class SignInActivity extends Activity {
 			try {
 				String imageUrl = urls[0];
 
-				URL newurl = null;
+				HttpClient httpClient = new DefaultHttpClient(); 
+				HttpGet httpGet = new HttpGet(imageUrl);
 				try {
-					newurl = new URL(imageUrl);
-				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
-				bitmap = null;
-				try {
-					bitmap = BitmapFactory.decodeStream(newurl.openConnection().getInputStream());
+					HttpResponse response = httpClient.execute(httpGet);
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+						HttpEntity entity = response.getEntity();
+						ByteArrayOutputStream out = new ByteArrayOutputStream();
+						entity.writeTo(out);
+						out.close();
+						// do something with response 
+
+						Options options = new BitmapFactory.Options();
+						options.inScaled = false;
+
+						bitmap = BitmapFactory.decodeByteArray(out.toByteArray(), 0, out.toByteArray().length, options);
+					} else {
+						// handle bad response
+					}
+				} catch (ClientProtocolException e) {
+					// handle exception
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					// handle exception
 				}
 
 				return null;
@@ -392,7 +467,6 @@ public class SignInActivity extends Activity {
 		}
 
 		protected void onPostExecute(Void v) {
-
 
 			if (bitmap != null) {
 				Bitmap output = makeCircular(bitmap);
@@ -451,11 +525,37 @@ public class SignInActivity extends Activity {
 						InputMethodManager.HIDE_NOT_ALWAYS);
 			}
 
-			if(isNetworkAvailable()) {			
-				// Show dialog
-				umdLoginDialog = ProgressDialog.show(
-						SignInActivity.this, "", "Signing In", true);
-				loginProcess();
+			if(isNetworkAvailable()) {		
+				if(fbLoggedIn) {					
+					// Show dialog
+					umdLoginDialog = ProgressDialog.show(
+							SignInActivity.this, "", "Signing In", true);
+					loginProcess();
+				} else {
+					AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(SignInActivity.this);
+
+
+					alertDialogBuilder
+					.setTitle("Login")
+					.setMessage("Social features are disabled, are you sure you would like to login without signing into Facebook?")
+					.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {	
+
+							// Show dialog
+							umdLoginDialog = ProgressDialog.show(
+									SignInActivity.this, "", "Signing In", true);
+							loginProcess();
+						}
+					})
+					.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+
+					AlertDialog alertDialog = alertDialogBuilder.create();
+					alertDialog.show();
+				}
 			} else {
 				Toast.makeText(SignInActivity.this, "No Internet Connection", Toast.LENGTH_SHORT).show();
 			}
@@ -480,6 +580,16 @@ public class SignInActivity extends Activity {
 
 		// Initialize the WebView and edit settings
 		WebView view = (WebView) findViewById(R.id.login_page);
+		//		view.getSettings().setJavaScriptEnabled(true);
+		//		view.getSettings().setDomStorageEnabled(true);
+		//		view.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+		//		view.getSettings().setLoadsImagesAutomatically(false);
+		//		view.getSettings().setSavePassword(false);
+		//		view.getSettings().setSaveFormData(false);
+		view.clearCache(true);
+		view.clearHistory();
+		view.clearSslPreferences();
+		view.clearFormData();
 
 
 		/* Register a new JavaScript interface called HTMLOUT */
@@ -508,48 +618,52 @@ public class SignInActivity extends Activity {
 						injectJavascript(view);
 					}
 
-					//Toast.makeText(SignInActivity.this, url, Toast.LENGTH_LONG).show();
-
 					// Wait for completed login using UID       
 					CookieManager manager = CookieManager.getInstance();
 
 					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-						if(!view.getUrl().contains("0")) { // Incorrect login
-							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-							umdLoginDialog.dismiss();
-						} else { // Correct login
+						//						if(!view.getUrl().contains("0")) { // Incorrect login
+						//							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
+						//							umdLoginDialog.dismiss();
+						//						} else { // Correct login
 
-							// Load the actual schedule page
-							view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-						}
+						// Load the actual schedule page
+						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
 					}
 
 				}
 			});
 
 			// Load the actual schedule page
-			view.loadUrl("https://mobilemy.umd.edu/portal/server.pt/gateway/PTARGS_0_340574_368_211_0_43/https%3B/www.sis.umd.edu/testudo/studentSched?term=201401");
+			view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term=201401");
 
 		}
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	public void injectJavascript(WebView view) {
 		// Sets the webview client for loading and accessing the HTML source of the schedule
-		view.setPictureListener(new PictureListener() {  
+		view.setWebViewClient(new WebViewClient() {  
 			int count = 0;
 
-			public void onNewPicture(WebView view, Picture picture) {
+			@Override  
+			public boolean shouldOverrideUrlLoading(WebView view, String url)  
+			{  
+				return false; 
+			}  
+
+			@Override
+			public void onPageFinished(WebView view, String url) {
 
 				if (count == 0) {
 					count++;
 
 					// Wait for completed login using UID       
 					CookieManager manager = CookieManager.getInstance();
-
 					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-						// Load the actual schedule page
+						// Pass HTML code to interface
 						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+
 
 					}
 				}
@@ -561,9 +675,9 @@ public class SignInActivity extends Activity {
 		String umd_password = ((EditText) findViewById(R.id.umd_password)).getText().toString();
 
 		view.loadUrl("javascript:(function() { " +  
-				"document.lform.in_tx_username.value='" + umd_username + "'; " +  
-				"document.lform.in_pw_userpass.value='" + umd_password + "'; " +
-				"doLogin(); " +
+				"document.getElementsByName('ldapid')[0].value='" + umd_username + "'; " +  
+				"document.getElementsByName('ldappass')[0].value='" + umd_password + "'; " +
+				"document.getElementsByName('login')[0].click(); " +
 				"})()");
 	}
 
@@ -587,26 +701,31 @@ public class SignInActivity extends Activity {
 			if(count == 0) {
 				count++;
 
-				// Determines the beginning and end of just the schedule
-				int beginIndex = html.indexOf(headerString);
-				int endIndex = html.indexOf("</table>", beginIndex) + 7;
-				if(beginIndex == -1) beginIndex = 0;
-
-				// Crops the substring of HTML source
-				final String scheduleTable = html.substring(beginIndex, endIndex + 1);
-
-				// Find beginning and end of comment for schedule data
-				int beginComment = html.indexOf("<!-- data size:");
-				int endComment = html.indexOf("-->", beginComment);
-
-				final String scheduleData = html.substring(beginComment, endComment + 1);
-
 				if(html.indexOf("An Error occurred while running this application.") != -1) { // Encountered error
 					Toast.makeText(SignInActivity.this, "An Error occurred while running this application. " +
 							"Please try again. If the problem persists, contact the Office of the Registrar " +
 							"at registrar-help@umd.edu or (301)314-8240.", Toast.LENGTH_LONG).show();
 					umdLoginDialog.dismiss();
+
+				} else if(html.indexOf("Invalid Login") != -1) {
+					Toast.makeText(SignInActivity.this, "Invalid Login", Toast.LENGTH_LONG).show();
+					umdLoginDialog.dismiss();
 				} else {
+
+					// Determines the beginning and end of just the schedule
+					int beginIndex = html.indexOf(headerString);
+					int endIndex = html.indexOf("</table>", beginIndex) + 7;
+					if(beginIndex == -1) beginIndex = 0;
+
+					// Crops the substring of HTML source
+					final String scheduleTable = html.substring(beginIndex, endIndex + 1);
+
+					// Find beginning and end of comment for schedule data
+					int beginComment = html.indexOf("<!-- data size:");
+					int endComment = html.indexOf("-->", beginComment);
+
+					final String scheduleData = html.substring(beginComment, endComment + 1);
+
 
 					float densityDPI = getResources().getDisplayMetrics().density; 
 					double zoom = 1;
@@ -629,7 +748,6 @@ public class SignInActivity extends Activity {
 					intent.putExtra("SOURCE_CODE", header + body + scheduleTable + footer);	
 					intent.putExtra("SCHEDULE_DATA", scheduleData);	
 
-
 					// Start activity
 					startActivity(intent);
 				}
@@ -637,5 +755,53 @@ public class SignInActivity extends Activity {
 		}
 	}
 
+
+	private class RetrieveSemestersTask extends AsyncTask<Void, Void, String> {
+		private Exception exception;
+		String semesterOutput;
+		String entireMessage;
+
+		protected String doInBackground(Void... params) {
+			try {
+
+				HttpClient httpClient = new DefaultHttpClient(); 
+				HttpGet httpGet = new HttpGet("http://www.kimonolabs.com/api/d9c7z5py?apikey=e228433aba70a1ea083189f321776248");
+				try {
+					HttpResponse response = httpClient.execute(httpGet);
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+						HttpEntity entity = response.getEntity();
+						ByteArrayOutputStream out = new ByteArrayOutputStream();
+						entity.writeTo(out);
+						out.close();
+
+						// Handle JSON response
+						entireMessage = out.toString();
+
+						JSONObject data = new JSONObject(entireMessage);
+						semesterOutput = data.getJSONObject("results").getJSONArray("Data").optJSONObject(0).getJSONObject("property1").getString("text");
+
+					} else {
+						// handle bad response
+					}
+				} catch (ClientProtocolException e) {
+					// handle exception
+				} catch (IOException e) {
+					// handle exception
+				}
+
+				return semesterOutput;
+			} catch (Exception e) {
+				this.exception = e;
+				return null;
+			}
+		}
+
+		@Override
+		protected void onPostExecute(String s) {
+			Toast.makeText(SignInActivity.this, entireMessage, 0).show();
+			Toast.makeText(SignInActivity.this, semesterOutput, 0).show();
+		}
+	}
 
 }
