@@ -178,7 +178,7 @@ public class FriendListAdapter extends BaseAdapter {
 
 
 		// Trigger the download of the URL asynchronously into the image view.
-		String imageUrl= "http://graph.facebook.com/" + getItemId(position) + "/picture?type=square";
+		String imageUrl= "https://graph.facebook.com/" + getItemId(position) + "/picture?type=square";
 
 		Picasso.with(context)
 		.load(imageUrl)

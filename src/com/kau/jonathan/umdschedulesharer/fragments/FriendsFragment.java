@@ -352,6 +352,8 @@ public class FriendsFragment extends ListFragment {
 			}
 
 			if(success) {
+				Toast.makeText(getActivity(), "Calculating data", 0).show();
+				
 				LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
 				data.addAll(parsedData.values());
 				Collections.sort(data);

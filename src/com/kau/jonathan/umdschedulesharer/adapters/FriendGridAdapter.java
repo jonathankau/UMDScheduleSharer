@@ -92,7 +92,7 @@ public class FriendGridAdapter extends BaseAdapter {
 
 		// Set image
 		// Trigger the download of the URL asynchronously into the image view.
-		String imageUrl= "http://graph.facebook.com/" + fsd.getFacebookId() + "/picture?type=square";
+		String imageUrl= "https://graph.facebook.com/" + fsd.getFacebookId() + "/picture?type=square";
 
 		Picasso.with(context)
 		.load(imageUrl)
