@@ -82,16 +82,22 @@ import com.kau.jonathan.umdschedulesharer.fragments.ScheduleFragment;
 
 public class ScheduleActivity extends ActionBarActivity {
 	String fbPhotoAddress = null;
+
+	static final String SEMESTER_CHOICE = "SEMESTER_CHOICE";
+	static final String UNTOUCHED_SOURCE = "UNTOUCHED_SOURCE";
 	static final String HTML_SOURCE = "scheduleSource";
 	static final String SCHEDULE_DATA = "SCHEDULE_DATA";
 	ViewPager mViewPager;
 	PagerAdapter mPageAdapter;
 	final String[] tabNames = {"Schedule","Classes","Friends"};
 	public Bitmap schedule;
+	public String untouched_src;
 	public String schedule_src;
 	public String schedule_data;
 	private ProgressDialog progressDialog;
 	public String accessToken = "";
+	public String original_term;
+	public String converted_term;
 
 	public HashMap<String, String> classes = new LinkedHashMap<String, String>();
 
@@ -115,7 +121,7 @@ public class ScheduleActivity extends ActionBarActivity {
 			if(session != null) {
 				//Toast.makeText(ScheduleActivity.this, session.getAccessToken(), Toast.LENGTH_SHORT).show();
 				accessToken = session.getAccessToken();
-				
+
 				if(classes != null) {
 					// Add schedule data to Albert's backend
 					new AddScheduleDataTask().execute(classes);
@@ -209,17 +215,58 @@ public class ScheduleActivity extends ActionBarActivity {
 	}
 
 	public void publishFacebook() {
-		WebView content = (WebView) findViewById(R.id.schedule_browser);
-		content.setDrawingCacheEnabled(true);
-		Picture screenshot = content.capturePicture();
-		PictureDrawable pictureDrawable = new PictureDrawable(screenshot);
-		Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
-		Canvas canvas = new Canvas(bitmap);
-		canvas.drawPicture(pictureDrawable.getPicture());
+		//		WebView content = (WebView) findViewById(R.id.schedule_browser);
+		//		content.setDrawingCacheEnabled(true);
+		//		Picture screenshot = content.capturePicture();
+		//		PictureDrawable pictureDrawable = new PictureDrawable(screenshot);
+		//		Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
+		//		Canvas canvas = new Canvas(bitmap);
+		//		canvas.drawPicture(pictureDrawable.getPicture());
+		//
+		//		// Crop bitmap by calling function		
+		//		final Bitmap cropped = cropBitmap(bitmap);
+		//		//final Bitmap cropped = bitmap;	
 
-		// Crop bitmap by calling function		
-		final Bitmap cropped = cropBitmap(bitmap);
-		//final Bitmap cropped = bitmap;
+		//				Session session = Session.getActiveSession();
+		//
+		//				// Part 1: create callback to get URL of uploaded photo
+		//				Request.Callback uploadPhotoRequestCallback = new Request.Callback() {
+		//					@Override
+		//					public void onCompleted(Response response) {
+		//						// safety check
+		//						if (isFinishing()) {
+		//							return;
+		//						}
+		//						if (response.getError() != null) {  // [IF Failed Posting]
+		//							Log.d("POTATO", "photo upload problem. Error="+response.getError() );
+		//						}  //  [ENDIF Failed Posting]
+		//
+		//						try {
+		//						} catch (NullPointerException e) {
+		//							// TODO Auto-generated catch block
+		//							e.printStackTrace();
+		//						}
+		//
+		//					}  // [END onCompleted]
+		//				}; 
+		//
+		//				//Part 2: upload the photo
+		//				Request request = Request.newUploadPhotoRequest(session, cropped, uploadPhotoRequestCallback);
+		//
+		//				byte[] data = null;
+		//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		//				cropped.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+		//				data = baos.toByteArray();
+		//
+		//				Bundle postParams = request.getParameters();
+		//				postParams.putByteArray("picture", data);
+		//				postParams.putString("message", "Shared with UMD Social Scheduler. Download at umdsocialscheduler.com");
+		//
+		//				request.setParameters(postParams);
+		//
+		//				request.executeAsync();
+		//
+		//				Toast.makeText(ScheduleActivity.this, "Schedule posted to timeline!", Toast.LENGTH_SHORT).show();
 
 
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ScheduleActivity.this);
@@ -229,48 +276,9 @@ public class ScheduleActivity extends ActionBarActivity {
 		.setTitle("Share to Facebook")
 		.setMessage("Would you like to post this schedule directly to your timeline?")
 		.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int id) {				
+			public void onClick(DialogInterface dialog, int id) {	
 
-				Session session = Session.getActiveSession();
-
-				// Part 1: create callback to get URL of uploaded photo
-				Request.Callback uploadPhotoRequestCallback = new Request.Callback() {
-					@Override
-					public void onCompleted(Response response) {
-						// safety check
-						if (isFinishing()) {
-							return;
-						}
-						if (response.getError() != null) {  // [IF Failed Posting]
-							Log.d("POTATO", "photo upload problem. Error="+response.getError() );
-						}  //  [ENDIF Failed Posting]
-
-						try {
-						} catch (NullPointerException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-
-					}  // [END onCompleted]
-				}; 
-
-				//Part 2: upload the photo
-				Request request = Request.newUploadPhotoRequest(session, cropped, uploadPhotoRequestCallback);
-
-				byte[] data = null;
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				cropped.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-				data = baos.toByteArray();
-
-				Bundle postParams = request.getParameters();
-				postParams.putByteArray("picture", data);
-				postParams.putString("message", "Shared with UMD Social Scheduler. Download at umdsocialscheduler.com");
-
-				request.setParameters(postParams);
-
-				request.executeAsync();
-
-				Toast.makeText(ScheduleActivity.this, "Schedule posted to timeline!", Toast.LENGTH_SHORT).show();
+				new PostFacebookTask().execute();
 
 
 			}
@@ -296,29 +304,40 @@ public class ScheduleActivity extends ActionBarActivity {
 
 		if (savedInstanceState != null) {
 			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+			original_term = savedInstanceState.getString(SEMESTER_CHOICE);
+			untouched_src = savedInstanceState.getString(UNTOUCHED_SOURCE);
 			schedule_src = savedInstanceState.getString(HTML_SOURCE);
 			schedule_data = savedInstanceState.getString(SCHEDULE_DATA);
 
 			pendingPublishReauthorization = 
 					savedInstanceState.getBoolean(PENDING_PUBLISH_KEY, false);
 		} else {
+			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+			
 			// Process incoming intent data
+			original_term = getIntent().getStringExtra("SEMESTER_CHOICE");
+			if(original_term == null && prefs.getString("com.kau.jonathan.umdschedulesharer.original_term", "") != "") {
+				original_term = prefs.getString("com.kau.jonathan.umdschedulesharer.original_term", "");
+			}
+			untouched_src = getIntent().getStringExtra("UNTOUCHED_SOURCE");
 			schedule_src = getIntent().getStringExtra("SOURCE_CODE");
 			schedule_data = getIntent().getStringExtra("SCHEDULE_DATA");
 
 			// Save data for later use
-			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 1).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.original_term", original_term).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.untouched_source", untouched_src).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_data", schedule_data).commit();
 		}
 
-		// Parse schedule data to figure out classes
+		// Convert original_term to converted
+		converted_term = convertSemesterCode(original_term);
 
+		// Parse schedule data to figure out classes
 
 		if(schedule_data != null) {
 			classes = parseScheduleData(schedule_data);
-			//Toast.makeText(ScheduleActivity.this, classes.keySet().toString(), Toast.LENGTH_SHORT).show();
 		}
 
 		// Setup Facebook lifecycle handler
@@ -438,6 +457,42 @@ public class ScheduleActivity extends ActionBarActivity {
 					.setTabListener(tabListener));
 		}
 
+	}
+
+	// Convert to term code
+	private String convertSemesterCode(String original) {
+		String output = "";
+
+		if(original == null) {
+//			Toast.makeText(this, original_term, 0).show();
+//			Toast.makeText(this, schedule_src, 0).show();
+//			Toast.makeText(this, untouched_src, 0).show();
+		} else {
+
+			HashMap<String, String> decoder = new HashMap<String, String>();
+			decoder.put("Spring", "01");
+			decoder.put("Summer I", "05");
+			decoder.put("Summer II", "07");
+			decoder.put("Fall", "08");
+			decoder.put("Winter", "12"); // Of previous year
+
+			String REGEX = "(.*)\\s(\\d{4})"; // Group 1 = term, Group 2 = year
+			Pattern p = Pattern.compile(REGEX);
+			Matcher m = p.matcher(original);
+
+			while(m.find()) {
+				Integer year = Integer.decode(m.group(2));
+				String term = decoder.get(m.group(1));
+
+				if(m.group(1).equals("Winter")) year = year - 1;
+
+				output = year.toString() + term;
+			}
+
+//			Toast.makeText(this, original, 0).show();
+//			Toast.makeText(this, output, 0).show();
+		}
+		return output;
 	}
 
 	// This function takes the WebView screenshot and crops away a large portion of the white space,
@@ -578,6 +633,8 @@ public class ScheduleActivity extends ActionBarActivity {
 			// Save data for later use
 			SharedPreferences prefs = this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
 			prefs.edit().putInt("com.kau.jonathan.umdschedulesharer.obtained_schedule", 0).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.original_term",original_term).commit();
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.untouched_source",untouched_src).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_code", schedule_src).commit();
 			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.schedule_data", schedule_data).commit();
 
@@ -592,6 +649,8 @@ public class ScheduleActivity extends ActionBarActivity {
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		// Save the user's current state
+		savedInstanceState.putString(SEMESTER_CHOICE, original_term);
+		savedInstanceState.putString(UNTOUCHED_SOURCE, untouched_src);
 		savedInstanceState.putString(HTML_SOURCE, schedule_src);
 		savedInstanceState.putString(SCHEDULE_DATA, schedule_data);
 		savedInstanceState.putBoolean(PENDING_PUBLISH_KEY, pendingPublishReauthorization);
@@ -660,7 +719,7 @@ public class ScheduleActivity extends ActionBarActivity {
 		String responseStr;
 		StringBuffer output;
 		String postOutput;
-		
+
 		@Override
 		protected Void doInBackground(HashMap<String, String>... params) {
 			HashMap<String, String> data = params[0];
@@ -669,9 +728,9 @@ public class ScheduleActivity extends ActionBarActivity {
 			for(String s: data.keySet()) {
 				output.append(s + "," + data.get(s) + "|");
 			}
-			
+
 			postOutput = output.toString();
-			
+
 			if(postOutput.length() != 0 && postOutput.charAt(postOutput.length() - 1) == '|') {
 				postOutput = postOutput.substring(0, postOutput.length() - 1);
 			}
@@ -702,17 +761,17 @@ public class ScheduleActivity extends ActionBarActivity {
 			// Send POST request with data to Albert's backend
 			HttpPost httpPost = new HttpPost("http://umdsocialscheduler.com/add_schedule");
 
-		    try {
-		        // Add your data
-		        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-		        nameValuePairs.add(new BasicNameValuePair("term", "201401")); // TODO: FIX THIS
-		        nameValuePairs.add(new BasicNameValuePair("schedule", output.toString()));
-		        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			try {
+				// Add your data
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+				nameValuePairs.add(new BasicNameValuePair("term", converted_term)); // TODO: FIX THIS
+				nameValuePairs.add(new BasicNameValuePair("schedule", output.toString()));
+				httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
-		        // Execute HTTP Post Request
-		        HttpResponse response = httpClient.execute(httpPost);
-		        
-		        StatusLine statusLine = response.getStatusLine();
+				// Execute HTTP Post Request
+				HttpResponse response = httpClient.execute(httpPost);
+
+				StatusLine statusLine = response.getStatusLine();
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 					HttpEntity entity = response.getEntity();
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -722,29 +781,29 @@ public class ScheduleActivity extends ActionBarActivity {
 				} else {
 					// handle bad response
 				}
-		        
-		        response.getEntity().consumeContent();
-		        
-		    } catch (ClientProtocolException e) {
-		        // TODO Auto-generated catch block
-		    } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		    }
-		    
+
+				response.getEntity().consumeContent();
+
+			} catch (ClientProtocolException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+			}
+
 			// Send POST request to render schedule
 			httpPost = new HttpPost("http://umdsocialscheduler.com/render_schedule");
 
-		    try {
-		        // Add your data
-		        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-		        nameValuePairs.add(new BasicNameValuePair("term", "201401")); // TODO: FIX THIS
-		        nameValuePairs.add(new BasicNameValuePair("html", schedule_src));
-		        httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			try {
+				// Add your data
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+				nameValuePairs.add(new BasicNameValuePair("term", converted_term)); // TODO: FIX THIS
+				nameValuePairs.add(new BasicNameValuePair("html", untouched_src));
+				httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
-		        // Execute HTTP Post Request
-		        HttpResponse response = httpClient.execute(httpPost);
-		        
-		        StatusLine statusLine = response.getStatusLine();
+				// Execute HTTP Post Request
+				HttpResponse response = httpClient.execute(httpPost);
+
+				StatusLine statusLine = response.getStatusLine();
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 					HttpEntity entity = response.getEntity();
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -754,21 +813,127 @@ public class ScheduleActivity extends ActionBarActivity {
 				} else {
 					// handle bad response
 				}
-		        
-		        response.getEntity().consumeContent();
-		        
-		    } catch (ClientProtocolException e) {
-		        // TODO Auto-generated catch block
-		    } catch (IOException e) {
-		        // TODO Auto-generated catch block
-		    }
-		    
+
+				response.getEntity().consumeContent();
+
+			} catch (ClientProtocolException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+			}
+
 			return null;			
 		}		
-		
+
 		protected void onPostExecute(Void v) {
-			Toast.makeText(ScheduleActivity.this, responseStr, Toast.LENGTH_SHORT).show();
+
+			//Toast.makeText(ScheduleActivity.this, schedule_src, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(ScheduleActivity.this, untouched_src, Toast.LENGTH_SHORT).show();
 			//Toast.makeText(ScheduleActivity.this, postOutput, Toast.LENGTH_SHORT).show();
+		}
+
+	}
+
+	private class PostFacebookTask extends AsyncTask <Void, Void, Void> {
+		String responseStr;
+		ProgressDialog posting;
+
+		@Override
+		protected void onPreExecute() {
+			posting = ProgressDialog.show(ScheduleActivity.this, "", "Posting to Facebook", true);
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {
+
+			// Instantiate UMD Social Scheduler Session
+			HttpClient httpClient = new DefaultHttpClient();  
+			String url = "http://umdsocialscheduler.com/access?access_token=" + accessToken;
+			HttpGet httpGet = new HttpGet(url);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+				} else {
+					// handle bad response
+				}
+
+				response.getEntity().consumeContent();
+			} catch (ClientProtocolException e) {
+				// handle exception
+			} catch (IOException e) {
+				// handle exception
+			}
+
+			// Send POST request to render schedule
+			HttpPost httpPost = new HttpPost("http://umdsocialscheduler.com/render_schedule");
+
+			try {
+				// Add your data
+				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+				nameValuePairs.add(new BasicNameValuePair("term", converted_term));
+				nameValuePairs.add(new BasicNameValuePair("html", untouched_src));
+				httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+				// Execute HTTP Post Request
+				HttpResponse response = httpClient.execute(httpPost);
+
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					responseStr = out.toString();
+				} else {
+					// handle bad response
+				}
+
+				response.getEntity().consumeContent();
+
+			} catch (ClientProtocolException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+			}
+
+			// Send GET request to backend to upload image
+			httpGet = new HttpGet("http://umdsocialscheduler.com/post_schedule");
+
+			try {
+				// Execute HTTP Post Request
+				HttpResponse response = httpClient.execute(httpGet);
+
+				StatusLine statusLine = response.getStatusLine();
+				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					HttpEntity entity = response.getEntity();
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					entity.writeTo(out);
+					out.close();
+					responseStr = out.toString();
+				} else {
+					// handle bad response
+				}
+
+				response.getEntity().consumeContent();
+
+			} catch (ClientProtocolException e) {
+				// TODO Auto-generated catch block
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+			}
+
+			return null;			
+		}		
+
+		protected void onPostExecute(Void v) {
+			if(posting != null) {
+				posting.dismiss();
+			}
 		}
 
 	}

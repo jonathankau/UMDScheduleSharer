@@ -288,7 +288,7 @@ public class FriendsFragment extends ListFragment {
 
 			for(String s: classes) {
 
-				url = "http://www.umdsocialscheduler.com/friends?term=201401&course=" + s;
+				url = "http://www.umdsocialscheduler.com/friends?term=" + ((ScheduleActivity) getActivity()).converted_term + "&course=" + s;
 				getData = new HttpGet(url);
 				try {
 					HttpResponse response = httpClient.execute(getData);
@@ -351,9 +351,7 @@ public class FriendsFragment extends ListFragment {
 				allow_sharing.setChecked(false);
 			}
 
-			if(success) {
-				Toast.makeText(getActivity(), "Calculating data", 0).show();
-				
+			if(success) {				
 				LinkedList<FriendDataHolder> data = new LinkedList<FriendDataHolder>();
 				data.addAll(parsedData.values());
 				Collections.sort(data);
