@@ -20,10 +20,11 @@
     <string name="semester_prompt">Choose Semester</string>
 
     <string-array name="semesters_array">
-        <item>Spring 2014</item>
-        <item>Winter 2014</item>
         <item>Fall 2013</item>
-        <item>Summer 2013</item>
+        <item>Winter 2014</item>
+        <item>Spring 2014</item>
+        <item>Summer I 2014</item>
+        <item>Summer II 2014</item>
     </string-array>
 
     <string name="title_activity_schedule">Social Scheduler</string>

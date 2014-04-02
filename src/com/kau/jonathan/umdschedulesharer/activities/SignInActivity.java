@@ -2,10 +2,14 @@ package com.kau.jonathan.umdschedulesharer.activities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -20,7 +24,6 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,10 +37,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory.Options;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
@@ -49,13 +51,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Display;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
@@ -80,7 +78,6 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 import com.facebook.widget.ProfilePictureView;
 import com.kau.jonathan.umdschedulesharer.R;
-import com.kau.jonathan.umdschedulesharer.views.TouchImageView;
 
 public class SignInActivity extends Activity {
 	private static final int REAUTH_ACTIVITY_CODE = 100;
@@ -96,6 +93,9 @@ public class SignInActivity extends Activity {
 	Bitmap defaultFacebookPic;
 	BroadcastReceiver broadcast;
 	WebView view;
+	Typeface face;
+	Typeface boldface;
+	String convertedTermCode;
 
 	boolean loginLoaded = false;
 	boolean fbLoggedIn = false;
@@ -142,6 +142,7 @@ public class SignInActivity extends Activity {
 			Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
 			// Attach source code
+			intent.putExtra("UNTOUCHED_SOURCE", prefs.getString("com.kau.jonathan.umdschedulesharer.untouched_source", ""));	
 			intent.putExtra("SOURCE_CODE", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_code", ""));	
 			intent.putExtra("SCHEDULE_DATA", prefs.getString("com.kau.jonathan.umdschedulesharer.schedule_data", ""));
 
@@ -176,9 +177,9 @@ public class SignInActivity extends Activity {
 
 
 		// Generate typefaces		
-		final Typeface face=Typeface.createFromAsset(this.getAssets(),
+		face=Typeface.createFromAsset(this.getAssets(),
 				"fonts/Lato-Reg.ttf");
-		final Typeface boldface=Typeface.createFromAsset(this.getAssets(),
+		boldface=Typeface.createFromAsset(this.getAssets(),
 				"fonts/Lato-Bol.ttf");
 
 		// Facebook Login Button
@@ -186,38 +187,52 @@ public class SignInActivity extends Activity {
 		login.setTypeface(face);
 
 
-		// Populate Spinner choices
-		Spinner spinner = (Spinner) findViewById(R.id.semester_spinner);
-		// Create an ArrayAdapter using the string array and a default spinner layout
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item){
+		// Populate semester choices
 
-			public View getView(int position, View convertView, ViewGroup parent) {
-				View v = super.getView(position, convertView, parent);				
-				((TextView) v).setTypeface(face);
-				return v;
-			}
+		String semestersText = prefs.getString("com.kau.jonathan.umdschedulesharer.semesters_text", "");
 
-
-			public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
-				View v =super.getDropDownView(position, convertView, parent);
-				((TextView) v).setTypeface(face);
-				return v;
-			}
-		};
-
-		// Populate choices
-		new RetrieveSemestersTask().execute();
-
-		String[] semesters = getResources().getStringArray(R.array.semesters_array);
-
-		for(String s: semesters) {
-			adapter.add(s);
+		if(isNetworkAvailable()) {
+			// Get choices from Kimono API
+			new RetrieveSemestersTask().execute();
 		}
 
-		// Specify the layout to use when the list of choices appears
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		// Apply the adapter to the spinner
-		spinner.setAdapter(adapter);
+		if(semestersText != null && !semestersText.equals("")) {
+			// Get choices from stored value
+			parseScheduleData(semestersText);
+		} else { 
+			// First login			
+			Spinner spinner = (Spinner) findViewById(R.id.semester_spinner);
+			ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item){
+
+				public View getView(int position, View convertView, ViewGroup parent) {
+					View v = super.getView(position, convertView, parent);				
+					((TextView) v).setTypeface(face);
+					return v;
+				}
+
+
+				public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
+					View v =super.getDropDownView(position, convertView, parent);
+					((TextView) v).setTypeface(face);
+					return v;
+				}
+			};
+
+
+			String[] semesters = getResources().getStringArray(R.array.semesters_array);
+
+			for(String s: semesters) {
+				adapter.add(s);
+			}
+
+			// Specify the layout to use when the list of choices appears
+			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			// Apply the adapter to the spinner
+			spinner.setAdapter(adapter);
+
+			spinner.setSelection(2);
+		}
+
 
 
 		// Change typeface for all text
@@ -258,21 +273,14 @@ public class SignInActivity extends Activity {
 			@SuppressWarnings("deprecation")
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				//				Toast.makeText(SignInActivity.this, "Login page loaded", 0).show();
-				//				Toast.makeText(SignInActivity.this, view.getTitle(), 0).show();
 
 				if(view != null && view.getTitle() != null && !view.getTitle().equals("Webpage not available")) {
-					//loginLoaded = true; //
+					loginLoaded = false;
 
 					// Wait for completed login using UID       
 					CookieManager manager = CookieManager.getInstance();
 
 					if((manager.getCookie(view.getUrl()) != null && manager.getCookie(view.getUrl()).contains("true")) || !view.getUrl().contains("0")) {
-						//						if(!view.getUrl().contains("0")) { // Incorrect login
-						//							Toast.makeText(SignInActivity.this, "Incorrect login", Toast.LENGTH_SHORT).show();
-						//
-						//							if(umdLoginDialog != null) umdLoginDialog.dismiss();
-						//						} else { // Correct login
 
 						// Load the actual schedule page
 						view.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
@@ -283,7 +291,7 @@ public class SignInActivity extends Activity {
 		});
 
 		// Load the actual schedule page
-		view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term=201401");		
+		view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term");		
 	}
 
 	@Override
@@ -350,12 +358,12 @@ public class SignInActivity extends Activity {
 	// FB State Managers
 
 	private void onSessionStateChange(final Session session, SessionState state, Exception exception) {
-		if (session.isOpened()) {
+		if (state.isOpened()) {
 			// Get the user's data.
 			makeMeRequest(session);
 
 			fbLoggedIn = true;
-		} else if (session.isClosed()) {
+		} else if (state.isClosed()) {
 			// Reset views
 			defaultFacebookPic = BitmapFactory.decodeResource(getResources(),
 					R.drawable.fb_default);
@@ -386,7 +394,7 @@ public class SignInActivity extends Activity {
 			public void onReceive(Context context, Intent intent) {
 				boolean connected = isNetworkAvailable();
 
-				if(connected) {
+				if(connected) {					
 					// Get user data
 					Session session = Session.getActiveSession();
 					if (session != null && session.isOpened()) {
@@ -577,6 +585,13 @@ public class SignInActivity extends Activity {
 
 	@SuppressLint({ "JavascriptInterface", "NewApi" })
 	public void loginProcess() {
+		// Figure out term code
+		Spinner semesterChoice = (Spinner) findViewById(R.id.semester_spinner);
+		String choice = semesterChoice.getSelectedItem().toString();
+		convertedTermCode = convertSemesterCode(choice);
+
+		//Toast.makeText(this, convertedTermCode, 0).show();
+
 
 		// Initialize the WebView and edit settings
 		WebView view = (WebView) findViewById(R.id.login_page);
@@ -635,7 +650,7 @@ public class SignInActivity extends Activity {
 			});
 
 			// Load the actual schedule page
-			view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term=201401");
+			view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?term=" + convertedTermCode);
 
 		}
 	}
@@ -707,8 +722,13 @@ public class SignInActivity extends Activity {
 							"at registrar-help@umd.edu or (301)314-8240.", Toast.LENGTH_LONG).show();
 					umdLoginDialog.dismiss();
 
+					// Fix WebView status
+					loginLoaded = false;
+					view.loadUrl("https://www.sis.umd.edu/testudo/studentSched?logout=logout");
+
+
 				} else if(html.indexOf("Invalid Login") != -1) {
-					Toast.makeText(SignInActivity.this, "Invalid Login", Toast.LENGTH_LONG).show();
+					Toast.makeText(SignInActivity.this, "Invalid Login", Toast.LENGTH_SHORT).show();
 					umdLoginDialog.dismiss();
 				} else {
 
@@ -745,6 +765,11 @@ public class SignInActivity extends Activity {
 					Intent intent = new Intent(SignInActivity.this, ScheduleActivity.class);
 
 					// Attach source code + data
+					Spinner semesterChoice = (Spinner) findViewById(R.id.semester_spinner);
+					String choice = semesterChoice.getSelectedItem().toString();
+
+					intent.putExtra("SEMESTER_CHOICE", choice);
+					intent.putExtra("UNTOUCHED_SOURCE", scheduleTable);
 					intent.putExtra("SOURCE_CODE", header + body + scheduleTable + footer);	
 					intent.putExtra("SCHEDULE_DATA", scheduleData);	
 
@@ -753,6 +778,59 @@ public class SignInActivity extends Activity {
 				}
 			}    
 		}
+	}
+
+	public void parseScheduleData(String incoming) {
+		if(incoming != null) {
+
+			ArrayList<String> output = new ArrayList<String>();
+			ArrayList<String> terms = new ArrayList<String>(
+					Arrays.asList("Fall", "Winter", "Spring", "Summer I", "Summer II"));
+
+			String REGEX = "\\\n(.*)\\s(\\d{4})"; // Group 1 = term, group 2 = year
+			Pattern p = Pattern.compile(REGEX);
+			Matcher m = p.matcher(incoming);
+
+			while(m.find()) {
+				String className = m.group(1);
+
+				if(terms.contains(className)) {
+					output.add(output.size(), className + " " + m.group(2));
+				}
+			}
+
+			// Populate Spinner choices
+			Spinner spinner = (Spinner) findViewById(R.id.semester_spinner);
+			// Create an ArrayAdapter using the string array and a default spinner layout
+			ArrayAdapter<String> adapter = new ArrayAdapter<String>(SignInActivity.this, R.layout.spinner_item){
+
+				public View getView(int position, View convertView, ViewGroup parent) {
+					View v = super.getView(position, convertView, parent);				
+					((TextView) v).setTypeface(face);
+					return v;
+				}
+
+
+				public View getDropDownView(int position,  View convertView,  ViewGroup parent) {
+					View v =super.getDropDownView(position, convertView, parent);
+					((TextView) v).setTypeface(face);
+					return v;
+				}
+			};
+
+			for(String b: output) {
+				adapter.add((String) b);
+			}
+
+			// Specify the layout to use when the list of choices appears
+			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			// Apply the adapter to the spinner
+			spinner.setAdapter(adapter);
+
+			spinner.setSelection(2);
+
+		}
+
 	}
 
 
@@ -799,9 +877,45 @@ public class SignInActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(String s) {
-			Toast.makeText(SignInActivity.this, entireMessage, 0).show();
-			Toast.makeText(SignInActivity.this, semesterOutput, 0).show();
+			//			Toast.makeText(SignInActivity.this, entireMessage, 0).show();
+			//			Toast.makeText(SignInActivity.this, semesterOutput, 0).show();
+
+			parseScheduleData(s);
+
+			// Save data for later use
+			SharedPreferences prefs = SignInActivity.this.getSharedPreferences("com.kau.jonathan.umdschedulesharer", Context.MODE_PRIVATE);
+			prefs.edit().putString("com.kau.jonathan.umdschedulesharer.semesters_text", s).commit();
 		}
+	}
+
+	// Convert to term code
+	private String convertSemesterCode(String original) {
+		String output = "";
+
+		if(original == null) {
+		} else {
+
+			HashMap<String, String> decoder = new HashMap<String, String>();
+			decoder.put("Spring", "01");
+			decoder.put("Summer I", "05");
+			decoder.put("Summer II", "07");
+			decoder.put("Fall", "08");
+			decoder.put("Winter", "12"); // Of previous year
+
+			String REGEX = "(.*)\\s(\\d{4})"; // Group 1 = term, Group 2 = year
+			Pattern p = Pattern.compile(REGEX);
+			Matcher m = p.matcher(original);
+
+			while(m.find()) {
+				Integer year = Integer.decode(m.group(2));
+				String term = decoder.get(m.group(1));
+
+				if(m.group(1).equals("Winter")) year = year - 1;
+
+				output = year.toString() + term;
+			}
+		}
+		return output;
 	}
 
 }

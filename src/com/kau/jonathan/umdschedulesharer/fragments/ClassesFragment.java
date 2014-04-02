@@ -173,7 +173,7 @@ public class ClassesFragment extends ListFragment {
 				for(String s: classes.keySet()) {
 					String section = classes.get(s);
 
-					url = "http://www.umdsocialscheduler.com/friends?term=201401&course=" + s;
+					url = "http://www.umdsocialscheduler.com/friends?term=" + ((ScheduleActivity) getActivity()).converted_term + "&course=" + s;
 					HttpGet getData = new HttpGet(url);
 					try {
 						HttpResponse response = httpClient.execute(getData);

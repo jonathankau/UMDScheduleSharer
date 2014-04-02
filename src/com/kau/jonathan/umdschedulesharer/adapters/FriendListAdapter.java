@@ -46,6 +46,7 @@ import com.kau.jonathan.umdschedulesharer.R;
 import com.kau.jonathan.umdschedulesharer.R.drawable;
 import com.kau.jonathan.umdschedulesharer.R.id;
 import com.kau.jonathan.umdschedulesharer.R.layout;
+import com.kau.jonathan.umdschedulesharer.activities.ScheduleActivity;
 import com.kau.jonathan.umdschedulesharer.activities.SignInActivity;
 import com.kau.jonathan.umdschedulesharer.models.FriendDataHolder;
 import com.kau.jonathan.umdschedulesharer.views.TouchImageView;
@@ -225,7 +226,7 @@ public class FriendListAdapter extends BaseAdapter {
 				// handle exception
 			}
 
-			String imageUrl = "http://www.umdsocialscheduler.com/schedule_image?term=201401&fbid=" + fb_id;
+			String imageUrl = "http://www.umdsocialscheduler.com/schedule_image?term=" + ((ScheduleActivity) context).converted_term + "&fbid=" + fb_id;
 			httpGet = new HttpGet(imageUrl);
 			try {
 				HttpResponse response = httpClient.execute(httpGet);
