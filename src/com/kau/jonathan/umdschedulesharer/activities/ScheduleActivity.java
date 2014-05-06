@@ -94,7 +94,7 @@ public class ScheduleActivity extends ActionBarActivity {
 	public String untouched_src;
 	public String schedule_src;
 	public String schedule_data;
-	private ProgressDialog progressDialog;
+	private ProgressDialog progressDialog;//
 	public String accessToken = "";
 	public String original_term;
 	public String converted_term;
@@ -700,13 +700,13 @@ public class ScheduleActivity extends ActionBarActivity {
 	public HashMap<String, String> parseScheduleData(String incoming) {
 		HashMap<String, String> output = new LinkedHashMap<String, String>();
 
-		String REGEX = "C(\\S*)(\\s|H)(\\S*)A"; // Group 1 = class name, Group 3 = section
+		String REGEX = "C(\\S*)(\\s|[A-Z])(\\S*)A"; // Group 1 = class name, Group 3 = section
 		Pattern p = Pattern.compile(REGEX);
 		Matcher m = p.matcher(incoming);
 
 		while(m.find()) {
 			String className = m.group(1);
-			if(m.group(2).equals("H")) className = className + "H";
+			if(!m.group(2).equals(" ")) className = className + m.group(2);
 			output.put(className, m.group(3));
 		}
 
